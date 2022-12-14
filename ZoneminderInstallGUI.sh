@@ -5,7 +5,7 @@ menu=("Ubuntu" "Arch Linux" "Fedora" "Centos 7 / Redhat")
 answer=`zenity --list --column="Supported Systems" "${menu[@]}" --height 500 --width=500 --title="ZoneMinder System Selection"`
 
 if [ "$answer" = "Ubuntu" ]; then
- echo placeholder  
+  exec ./ZoneminderUBUNTUINSTALL
 fi
 if [ "$answer" = "Arch Linux" ]; then
     echo placeholder
