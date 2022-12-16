@@ -10,6 +10,7 @@ else
 sudo pacman -Syu
 sudo pacman -S git --noconfirm
 sudo pacman -S fakeroot --noconfirm
+sudo pacman -S make --noconfirm
 cd /opt
 sudo git clone https://aur.archlinux.org/yay-git.git
 sudo chown -R $USER:$USER ./yay-git
