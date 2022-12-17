@@ -1,19 +1,24 @@
 #!/bin/bash
-echo This Script is used to install ZoneMinder CCTV system : if you are ever prompted to enter your password please do so :
-read -p "Press [Enter] key to Install ZoneMinder CCTV" 
-read -p "Press any key to Start ..."
-sudo yum install nano
+user=$(whoami)
+zenity --info  --text "This Script is used to install ZoneMinder CCTV system ; if you are ever prompted to enter your password please do so"
+zenity --question --text "Are you sure you want to Install Zoneminder?" --no-wrap --ok-label "Yes" --cancel-label "No"
+if [[ $? -eq 1 ]]
+then exit 0
+fi
+sudo yum install nano -y
+sudo yum install sed -y
 sleep 5
-sudo yum install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-sudo yum install epel-release
-sudo yum install yum-plugins-core
+sudo yum install --nogpgcheck https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
+sudo yum install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm -y
+sudo yum install epel-release -y
+sudo yum install yum-plugins-core -y
 sudo yum config-manager --set-enabled PowerTools
+sudo subscription-manager repos --enable "codeready-builder-for-rhel-8-$(uname -m)-rpms"
 sleep 5
-yum install zoneminder-httpd
-sudo yum install mariadb-serverhe 
+yum install zoneminder-httpd -y
+sudo yum install mariadb-server -y
 systemctl enable mariadb
 systemctl start  mariadb.service
-echo 
 sleep 3
 mysql_secure_installation
 sleep 10
@@ -25,13 +30,7 @@ mysql -u root -p -e "GRANT ALL PRIVILEGES ON zm.* TO \
 mysqladmin -uroot -p reload
 sleep 5
 setenforce 0
-echo "please add the folowing to line 25 ( press enter and put this in the new line)
-
-define( 'ZM_TIMEZONE', 'America/Chicago' );"
-
-read -p "Press [Enter] key to open zm config..."
-read -p "Press any key to resume ..."
-sudo nano /usr/share/zoneminder/www/includes/config.php
+sed -i 25 a "define( 'ZM_TIMEZONE', 'America/Chicago' );" /usr/share/zoneminder/www/includes/config.php
 sudo ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
 sudo yum install mod_ssl -y 
 sudo systemctl enable httpd
@@ -40,10 +39,7 @@ sudo se systemctl enable zoneminder
 sudo systemctl start zoneminder
 sudo systemctl disable firewalld
 sudo systemctl stop firewalld
-echo please edit /etc/selinux/config and replace enforcing to disabled
-read -p "Press [Enter] key to open the SElinux config file..."
-read -p "Press any key to resume
-sudo nano /etc/selinux/config
+sed -i 's/enforcing/disabled/g' /etc/selinux/config
 read -p "Congratulations! ZoneMinder Has Successfully Been Installed to Your PC! Please go to http://youripaddress/zm after reboot to go to the Zoneminder Web Interface"
 read -p "Press any key to Continue ..."
 read -p "Press [Enter] key to reboot..."

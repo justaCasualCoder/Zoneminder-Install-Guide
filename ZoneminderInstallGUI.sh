@@ -8,15 +8,19 @@ if [ "$answer" = "Arch Linux" ]; then
  echo placeholder  
 fi
 if [ "$answer" = "Ubuntu" ]; then
-    echo ./ZoneminderUBUNTUINSTALL.sh
-fi
+    sudo chmod +x ZoneminderUBUNTUINSTALL.sh
+    sudo ./ZoneminderUBUNTUINSTALL.sh
+fi 
 if [ "$answer" = "Fedora" ]; then
+    sudo chmod +x installzoneminderREDHATGENERAL.sh
     sudo ./installzoneminderREDHATGENERAL.sh
 fi
 if [ "$answer" = "Centos 7 / Redhat" ]; then
-    echo placeholder
+    sudo chmod +x RHEL-Centos7-installerzoneminder.sh
+    sudo ./RHEL-Centos7-installerzoneminder.sh
 fi
 if [ "$answer" = "Debian" ]; then
+    sudo chmod +x DebianZoneminderInstaller.sh
     sudo ./DebianZoneminderInstaller.sh
 fi
 echo "You chose $answer as your OS"
