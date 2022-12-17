@@ -6,7 +6,6 @@ It has currently only be tested on Ubuntu 22.04 , Debain 11 , and Fedora 36
 
 ```
 sudo chmod +x ZoneminderInstallGUI.sh
-
 ```
 When you run the GUI it will automattically make the other files required executable
 
