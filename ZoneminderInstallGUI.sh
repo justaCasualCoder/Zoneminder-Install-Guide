@@ -5,7 +5,8 @@ menu=("Ubuntu" "Arch Linux" "Fedora" "Centos 7 / Redhat" "Debian")
 answer=`zenity --list --column="Supported Systems" "${menu[@]}" --height 500 --width=500 --title="ZoneMinder System Selection"`
 
 if [ "$answer" = "Arch Linux" ]; then
- echo placeholder  
+sudo chmod +x Arch\ Linux\ install.sh
+sudo ./Arch\ Linux\ Install.sh
 fi
 if [ "$answer" = "Ubuntu" ]; then
     sudo chmod +x ZoneminderUBUNTUINSTALL.sh
