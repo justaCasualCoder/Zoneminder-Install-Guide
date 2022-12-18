@@ -22,6 +22,11 @@ if [ "$?" -eq "0" ];
 then 
 OS="Arch Linux"
 fi
+lsb_release -a | grep -qe Debian
+if [ "$?" -eq "0" ];
+then
+OS=Debian
+fi
 if [ -z "$OS" ]
 then
       echo "Your OS could not be detected; the manual GUI OS picker will start"
@@ -44,6 +49,25 @@ cd /opt
 sudo git clone https://aur.archlinux.org/yay-git.git
 sudo chown -R $USER:$USER ./yay-git
 cd yay-git
-makepkg -si --noconfirm   
+makepkg -si --noconfirm
+sudo chmod +x Arch\ Linux\ install.sh
+sudo ./Arch\ Linux\ Install.sh  
 fi
 fi
+if [ "$answer" = "Ubuntu" ]; then
+    sudo chmod +x ZoneminderUBUNTUINSTALL.sh
+    sudo ./ZoneminderUBUNTUINSTALL.sh
+fi 
+if [ "$answer" = "Fedora" ]; then
+    sudo chmod +x installzoneminderREDHATGENERAL.sh
+    sudo ./installzoneminderREDHATGENERAL.sh
+fi
+if [ "$answer" = "OpenSuSE" ]; then
+    sudo chmod +x RHEL-Centos7-installerzoneminder.sh
+    sudo ./RHEL-Centos7-installerzoneminder.sh
+fi
+if [ "$answer" = "Debian" ]; then
+    sudo chmod +x DebianZoneminderInstaller.sh
+    sudo ./DebianZoneminderInstaller.sh
+fi
+echo "You chose $answer as your OS"
