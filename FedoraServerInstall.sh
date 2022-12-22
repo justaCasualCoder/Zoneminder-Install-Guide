@@ -47,8 +47,8 @@ sed -i 's/enforcing/disabled/g' /etc/selinux/config
 read -p "Congratulations! ZoneMinder Has Successfully Been Installed to Your PC! Please go to http://youripaddress/zm after reboot to go to the Zoneminder Web Interface"
 read -p "Press any key to Continue ..."
 read -p "Press [Enter] key to reboot..."
-echo GOING TO REBOOT!
+echo "GOING TO REBOOT!"
 sleep 2
-echo REBOOTING!
+echo "REBOOTING!"
 reboot
 

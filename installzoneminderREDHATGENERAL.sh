@@ -42,8 +42,8 @@ zenity --question --text "The system is going to reboot to finish the installati
 if [[ $? -eq 1 ]]
 then exit 0
 fi
-echo GOING TO REBOOT!
+echo "GOING TO REBOOT!"
 sleep 5
-echo REBOOTING!
+echo "REBOOTING!"
 reboot
 
