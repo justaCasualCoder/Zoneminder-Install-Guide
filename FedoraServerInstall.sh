@@ -1,12 +1,19 @@
 #!/bin/bash
-zenity --info  --text "This Script is used to install ZoneMinder CCTV system ; if you are ever prompted to enter your password please do so"
-zenity --question --text "Are you sure you want to Install Zoneminder?" --no-wrap --ok-label "Yes" --cancel-label "No"
-if [[ $? -eq 1 ]]
+read -p "This Script is used to install ZoneMinder CCTV system ; if you are ever prompted to enter your password please do so"
+read -p  "Are you sure you want to Install Zoneminder? ( Type Y for Yes and anything else for No" 
+read confirm
+if [[ $confirm != Y ]]
 then exit 0
 fi
 sudo dnf install nano -y
 sudo dnf install sed -y
-sleep 5
+sudo dnf install httpd -y
+sudo service httpd start
+sudo dnf install mysql mysql-server -y 
+sudo service mysqld start
+sudo /usr/bin/mysql_secure_installation
+sudo dnf install php php-mysql
+sudo chkconfig httpd on sudo chkconfig mysqld on
 sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
 sudo dnf install epel-release -y
 sudo dnf install dnf-plugins-core -y
@@ -37,13 +44,11 @@ sudo systemctl start zoneminder
 sudo systemctl disable firewalld
 sudo systemctl stop firewalld
 sed -i 's/enforcing/disabled/g' /etc/selinux/config
-zenity --info --text "Congratulations! ZoneMinder Has Successfully Been Installed to Your PC! Please go to http://youripaddress/zm to go to the Zoneminder Web Interface"
-zenity --question --text "The system is going to reboot to finish the installation - press cancel to stop the reboot" --no-wrap --ok-label "Continue" --cancel-label "Cancel"
-if [[ $? -eq 1 ]]
-then exit 0
-fi
+read -p "Congratulations! ZoneMinder Has Successfully Been Installed to Your PC! Please go to http://youripaddress/zm after reboot to go to the Zoneminder Web Interface"
+read -p "Press any key to Continue ..."
+read -p "Press [Enter] key to reboot..."
 echo GOING TO REBOOT!
-sleep 5
+sleep 2
 echo REBOOTING!
 reboot
 
