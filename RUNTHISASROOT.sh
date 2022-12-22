@@ -1,5 +1,6 @@
 #!/bin/bash
 Red=$'\e[1;31m'
+Green=$(tput setaf 2)
 while getopts "mh" FLAG
 do
   case "${FLAG}" in
@@ -24,7 +25,7 @@ if [ "$help" -eq "1" ];
 then
 echo "# Zoneminder-InstallerGUI
 This is just a simple respitory containing Zoneminder install scripts
-It has currently only be tested on Ubuntu 22.04 , Debain 11 , and Fedora 36
+It has currently only been tested on Ubuntu 22.04 , Debain 11 , and Fedora 36
 
 ### You need to run this command inside the folder in order for the files to run correctly
 
@@ -40,6 +41,11 @@ sudo apt-get -y install lsb-release
 if [ "$?" != "1" ];
 then
 sudo yum -y install lsb-release
+if [ "$?" != "1" ];
+then
+sudo pacman -Sy --noconfirm
+sudo pacman -S lsb_release --noconfirm
+fi
 fi
 lsb_release -a | grep -qe buntu
 if [ "$?" -eq "0" ];
@@ -72,11 +78,11 @@ else
       echo  Your OS is $OS
 fi
 exit 0
-if [ "OS" -eq "Arch Linux" ];
+if [ "$OS" -eq "Arch Linux" ];
 then
 sudo pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
-   echo "Yay Is already installed!"
+   echo "$Green Yay Is already installed!"
 else 
 sudo pacman -Syu
 sudo pacman -S git --noconfirm
