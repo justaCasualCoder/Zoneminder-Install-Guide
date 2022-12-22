@@ -1,4 +1,41 @@
 #!/bin/bash
+Red=$'\e[1;31m'
+while getopts "mh" FLAG
+do
+  case "${FLAG}" in
+    m)
+      man=1
+      ;;
+    h)
+      help=1
+      ;;
+    *)
+      echo "Unknown usage, please use a vaild option"
+      ;;
+  esac
+done
+if [ "$man" -eq "1" ];
+then
+./ZoneminderInstallGUI.sh
+sleep 2
+exit 0
+fi
+if [ "$help" -eq "1" ];
+then
+echo "# Zoneminder-InstallerGUI
+This is just a simple respitory containing Zoneminder install scripts
+It has currently only be tested on Ubuntu 22.04 , Debain 11 , and Fedora 36
+
+### You need to run this command inside the folder in order for the files to run correctly
+
+```
+sudo chmod +x ZoneminderInstallGUI.sh
+```
+When you run the GUI it will automatically make the other files required executable
+"
+sleep 100
+exit 0
+fi
 sudo apt-get -y install lsb-release
 if [ "$?" != "1" ];
 then
@@ -29,7 +66,7 @@ OS=Debian
 fi
 if [ -z "$OS" ]
 then
-      echo "Your OS could not be detected; the manual GUI OS picker will start"
+      echo "$Red !ERROR!" "Your OS could not be detected; the manual GUI OS picker will start"
       ./ZoneminderInstallGUI.sh
 else
       echo  Your OS is $OS
