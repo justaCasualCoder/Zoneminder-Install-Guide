@@ -19,7 +19,8 @@ then exit 0
 fi
 sudo yum install nano -y
 sudo yum install sed -y
-sleep 5
+echo "Adding RPM Fusion Respitory"
+sleep 3
 sudo yum install --nogpgcheck https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
 sudo yum install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm -y
 sudo yum install epel-release -y
@@ -27,7 +28,9 @@ sudo yum install yum-plugins-core -y
 sudo yum config-manager --set-enabled PowerTools
 sudo subscription-manager repos --enable "codeready-builder-for-rhel-8-$(uname -m)-rpms"
 sleep 5
-yum install zoneminder-httpd -y
+echo "Installing Zoneminder"
+sudo yum install zoneminder-httpd -y
+echo "Installing MariaDB and securing install"
 sudo yum install mariadb-server -y
 systemctl enable mariadb
 systemctl start  mariadb.service
