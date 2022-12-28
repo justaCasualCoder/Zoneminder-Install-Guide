@@ -1,6 +1,4 @@
 #!/bin/bash
-user=$(whoami)
-if [ $cprt != 1 ]; then
 echo --------------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ Zoneminder Install Script ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
@@ -10,54 +8,69 @@ echo ---------------------------------------------------------------------------
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
+zenity --info --text "This Script MUST be run as root!"
+if [ "$EUID" -ne 0 ];then
+    echo "Please run this script as root"
+    exit 1
 fi
-export cprt=1
 zenity --info  --text "This Script is used to install ZoneMinder CCTV system ; if you are ever prompted to enter your password please do so"
 zenity --question --text "Are you sure you want to Install Zoneminder?" --no-wrap --ok-label "Yes" --cancel-label "No"
 if [[ $? -eq 1 ]]
 then exit 0
 fi
-sudo yum install nano -y
-sudo yum install sed -y
+password=$(zenity --password --text "(Please enter your current password)"
+sudo ufw allow 80
+sudo ufw allow 443
+apt update -y
+# Update Respitories
+apt upgrade -y
+# Update The System
+apt install apache2 -y
+sudo ufw allow in "Apache"
+apt install mysql-server -y
+sudo echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by '$password';" >> /tmp/temp.txt
+sudo mysql -u root  <  /tmp/temp.txt
 sleep 5
-sudo yum install --nogpgcheck https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
-sudo yum install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm -y
-sudo yum install epel-release -y
-sudo yum install yum-plugins-core -y
-sudo yum config-manager --set-enabled PowerTools
-sudo subscription-manager repos --enable "codeready-builder-for-rhel-8-$(uname -m)-rpms"
-sleep 5
-yum install zoneminder-httpd -y
-sudo yum install mariadb-server -y
-systemctl enable mariadb
-systemctl start  mariadb.service
-sleep 3
-mysql_secure_installation
-sleep 10
-mysql -u root -p < /usr/share/zoneminder/db/zm_create.sql
-mysql -u root -p -e "CREATE USER 'zmuser'@'localhost' \
-                          IDENTIFIED BY 'zmpass';"
-mysql -u root -p -e "GRANT ALL PRIVILEGES ON zm.* TO \
-                         'zmuser'@localhost;"
-mysqladmin -uroot -p reload
-sleep 5
-setenforce 0
+sudo rm /tmp/temp.txt
+zenity --info --text "Now we are going to secure the mysql installation ; Please Complete the folowing prompt"
+sudo mysql_secure_installation
 sed -i 25 a "define( 'ZM_TIMEZONE', 'America/Chicago' );" /usr/share/zoneminder/www/includes/config.php
-sudo ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
-sudo yum install mod_ssl -y 
-sudo systemctl enable httpd
-sudo systemctl start httpd
-sudo se systemctl enable zoneminder
+sudo apt install php libapache2-mod-php php-mysql -y
+sudo add-apt-repository ppa:iconnor/zoneminder-1.36 -y
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get dist-upgrade -y
+rm /etc/mysql/my.cnf 
+cp /etc/mysql/mysql.conf.d/mysqld.cnf /etc/mysql/my.cnf
+mysql -uroot -p < /usr/share/zoneminder/db/zm_create.sql
+mysql -uroot -p -e "grant lock tables,alter,drop,select,insert,update,delete,create,index,alter routine,create routine, trigger,execute on zm.* to 'zmuser'@localhost identified by 'zmpass';"
+sudo systemctl restart mysql
+apt-get install zoneminder -y
+chmod 740 /etc/zm/zm.conf
+chown root:www-data /etc/zm/zm.conf
+chown -R www-data:www-data /usr/share/zoneminder/
+a2enmod cgi
+a2enmod rewrite
+a2enconf zoneminder
+a2enmod expires
+a2enmod headers
+sudo systemctl enable zoneminder
 sudo systemctl start zoneminder
-sudo systemctl disable firewalld
-sudo systemctl stop firewalld
-sed -i 's/enforcing/disabled/g' /etc/selinux/config
-read -p "Congratulations! ZoneMinder Has Successfully Been Installed to Your PC! Please go to http://youripaddress/zm after reboot to go to the Zoneminder Web Interface"
-read -p "Press any key to Continue ..."
-read -p "Press [Enter] key to reboot..."
-read -p "Press any key to Continue ..."
-echo GOING TO REBOOT!
-sleep 5
-echo REBOOTING!
-reboot
+sudo zmupdate.pl -f
+sudo systemctl reload apache2
+echo " 
 
+    Open up a browser and go to http://hostname_or_ip/zm - should bring up ZoneMinder Console
+
+    (Optional API Check)Open up a tab in the same browser and go to http://hostname_or_ip/zm/api/host/getVersion.json
+
+        If it is working correctly you should get version information similar to the example below:
+
+        {
+            "version": "1.29.0",
+            "apiversion": "1.29.0.1"
+        }
+
+"
+echo Congratulations! Your installation is complete!
+sleep 10
