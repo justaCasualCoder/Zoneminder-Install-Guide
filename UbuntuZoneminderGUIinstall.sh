@@ -18,7 +18,7 @@ zenity --question --text "Are you sure you want to Install Zoneminder?" --no-wra
 if [[ $? -eq 1 ]]
 then exit 0
 fi
-password=$(zenity --password --text "(Please enter your current password)"
+password=$(zenity --password --text "(Please enter your current password)")
 sudo ufw allow 80
 sudo ufw allow 443
 apt update -y

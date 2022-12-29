@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Display the welcome message
+dialog --title "Welcome" --msgbox "Welcome to the installer for our application. Press OK to continue." 8 40
+
+# Ask the user for their installation destination
+install_dir=$(dialog --stdout --title "Installation Destination" --dselect / 8 40)
+
+# Confirm the installation destination with the user
+dialog --title "Confirm Installation Destination" --yesno "Are you sure you want to install to $install_dir?" 8 40
+
+# If the user confirms the installation destination, begin the installation
+if [ $? -eq 0 ]; then
+  # Display a progress bar while the installation is in progress
+  (
+    # Perform the installation steps here
+    # ...
+    
+    # Update the progress bar every 1 second
+    while true; do
+      sleep 1
+      echo "XXX"
+    done
+  ) | dialog --title "Installing" --gauge "Installing..." 8 40
+  
+  # Display a success message when the installation is complete
+  dialog --title "Installation Complete" --msgbox "The installation was successful. Press OK to exit the installer." 8 40
+fi
+
+# If the user cancels the installation, display an exit message
+if [ $? -eq 1 ]; then
+  dialog --title "Installation Cancelled" --msgbox "The installation has been cancelled. Press OK to exit the installer." 8 40
+fi
+
