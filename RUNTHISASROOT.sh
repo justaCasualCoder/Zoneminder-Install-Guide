@@ -1,8 +1,28 @@
 #!/bin/bash
-if [ $? != "1" ];
-then
-sudo dnf install zenity
+# Check if machine is server or desktop
+echo -n "Are you running this script on a Server or Desktop?  : "
+read ServerorDesktop
+while [ $ServerorDesktop != "Server" ] && [ $ServerorDesktop != "Desktop" ] ; do
+  echo Invalid input. Please enter 'Server' or 'Desktop'
+  read ServerorDesktop
+done
+# Check if an input parameter was provided
+if [ $# -eq 1 ]; then
+  # Use the input parameter as the message
+  parameter=$1
 fi
+if [ $parameter = "-m"]; then
+  if [ $ServerorDesktop = Server ]; then
+  chmod +x OSPICKERSERVER.sh
+  ./OSPICKERSERVER.sh
+  exit 0
+  else
+    chmod +x ZoneminderInstallGUI.sh
+  ./ZoneminderInstallGUI.sh
+  exit 0
+  fi
+fi
+sudo dnf install zenity
 sudo apt-get -y install zenity
 if [ $? != "1" ];
 then
@@ -16,19 +36,13 @@ fi
 export cprt=0
 echo --------------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------
-echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ Zoneminder Install Script ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ Zoneminder Install Script ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ by @justaCasualCoder ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
 echo --------------------------------------------------------------------------------
-echo --------------------------------------------------------------------------------‎ 
-echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
-echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
-echo ‎ ‎ ‎ 
-echo -n "Are you running this script on a Server or Desktop?  : "
-read ServerorDesktop
-while [ $ServerorDesktop != "Server" ] && [ $ServerorDesktop != "Desktop" ] ; do
-  echo Invalid input. Please enter 'Server' or 'Desktop'
-  read ServerorDesktop
-done
+echo --------------------------------------------------------------------------------‎
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+echo ‎ ‎ ‎
 ‎‎‎FILE=`dirname $0`/license.txt
 if [ $ServerorDesktop = "Server" ]; then
 echo "Terms And Conditions are at https://github.com/justaCasualCoder/Zoneminder-InstallerGUI/blob/main/license.txt"
@@ -37,7 +51,7 @@ zenity --text-info \
    --title="License" \
    --filename=$FILE \
    --checkbox="I read and accept the terms."
-fi 
+fi
 export cprt=1
 DIR=$( pwd; )
 USER=$(whoami)
@@ -66,12 +80,12 @@ fi
 
 lsb_release -a | grep -qe buntu
 if [ $? = "0" ];
-then 
+then
 OS=Ubuntu
 fi
 lsb_release -a | grep -qe Fedora
 if [ $? = "0" ];
-then 
+then
 OS=Fedora
 fi
 if [ -f "/etc/SuSE-release" ]; then
@@ -79,7 +93,7 @@ OS=OpenSuSE
 fi
 lsb_release -a | grep -qe Arch
 if [ $? = '0' ];
-then 
+then
 OS="Arch Linux"
 fi
 lsb_release -a | grep -qe Debian
@@ -104,7 +118,7 @@ then
 sudo pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
    echo $Green Yay Is already installed!
-else 
+else
 sudo pacman -Syu
 sudo pacman -S git --noconfirm
 sudo pacman -S fakeroot --noconfirm
@@ -115,21 +129,21 @@ sudo chown -R $USER:$USER ./yay-git
 cd yay-git
 makepkg -si --noconfirm
 sudo chmod +x Arch\ Linux\ install.sh
-sudo ./Arch\ Linux\ Install.sh  
+sudo ./Arch\ Linux\ Install.sh
 fi
 fi
 echo $OS
 if [[ $OS = 'Ubuntu' ]]
 then
     if [ $ServerorDesktop = "Server" ]; then
-    
+
     sudo chmod +x ZoneminderUBUNTUSERVERINSTALL.sh
     sudo ./ZoneminderUBUNTUSERVERINSTALL.sh
     else
     sudo chmod +x UbuntuZoneminderGUIinstall.sh
     sudo ./UbuntuZoneminderGUIinstall.sh
     fi
-fi 
+fi
 if [ $OS = 'Fedora' ]; then
     if [ $ServerorDesktop = "Server" ]; then
     sudo chmod +x FedoraServerInstall.sh
