@@ -87,11 +87,10 @@ if [ '$?' = "0" ];
 then
 OS=Debian
 fi
-OS='Ubuntu'
 if [ -z $OS ]
 then
       echo $Red '!ERROR! Your OS could not be detected; the manual OS picker will start'
-      if [ $ServerorDesktop = "Server" ]; then
+      if [ $ServerorDesktop = Server ]; then
       chmod +x OSPICKERSERVER.sh
       ./OSPICKERSERVER.sh
       else

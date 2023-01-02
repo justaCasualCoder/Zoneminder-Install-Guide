@@ -1,4 +1,14 @@
 #!/bin/bash
+user=$(whoami)
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+yellow=$(tput setaf 3)
+blue=$(tput setaf 4)
+magenta=$(tput setaf 5)
+cyan=$(tput setaf 6)
+white=$(tput setaf 7)
+reset=$(tput sgr0)
+if [ $cprt != 1 ]; then
 echo --------------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ Zoneminder Install Script ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
@@ -8,25 +18,25 @@ echo ---------------------------------------------------------------------------
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+fi
+export cprt=1
 read -p "This Script is used to install ZoneMinder CCTV system ; if you are ever prompted to enter your password please do so"
-echo "Getting ready to install.... Press Control+c to cancel"
-sleep 10
-sudo dnf install nano -y
-sudo dnf install sed -y
-sudo dnf install httpd -y
-sudo service httpd start
-sudo dnf install mysql mysql-server -y
-sudo service mysqld start
-sudo /usr/bin/mysql_secure_installation
-sudo dnf install php php-mysql
-sudo chkconfig httpd on sudo chkconfig mysqld on
-sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-sudo dnf install epel-release -y
-sudo dnf install dnf-plugins-core -y
-sudo dnf config-manager --set-enabled PowerTools
+read -p "Are you sure you want to Install Zoneminder? (Press Control-C to cancel)"
+sudo yum install nano -y
+sudo yum install sed -y
+echo "Adding RPM Fusion Respitory"
+sleep 3
+sudo yum install --nogpgcheck https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
+sudo yum install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm -y
+sudo yum install epel-release -y
+sudo yum install yum-plugins-core -y
+sudo yum config-manager --set-enabled PowerTools
+sudo subscription-manager repos --enable "codeready-builder-for-rhel-8-$(uname -m)-rpms"
 sleep 5
-dnf install zoneminder-httpd -y
-sudo dnf install mariadb-server -y
+echo "Installing Zoneminder"
+sudo yum install zoneminder-httpd -y
+echo "Installing MariaDB and securing install"
+sudo yum install mariadb-server -y
 systemctl enable mariadb
 systemctl start  mariadb.service
 sleep 3
@@ -42,7 +52,7 @@ sleep 5
 setenforce 0
 sed -i 25 a "define( 'ZM_TIMEZONE', 'America/Chicago' );" /usr/share/zoneminder/www/includes/config.php
 sudo ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
-sudo dnf install mod_ssl -y
+sudo yum install mod_ssl -y
 sudo systemctl enable httpd
 sudo systemctl start httpd
 sudo se systemctl enable zoneminder
@@ -58,7 +68,8 @@ exit"
 read -p "Congratulations! ZoneMinder Has Successfully Been Installed to Your PC! Please go to http://youripaddress/zm after reboot to go to the Zoneminder Web Interface"
 read -p "Press any key to Continue ..."
 read -p "Press [Enter] key to reboot..."
-echo "GOING TO REBOOT!"
-sleep 2
-echo "REBOOTING!"
+read -p "Press any key to Continue ..."
+echo GOING TO REBOOT!
+sleep 5
+echo REBOOTING!
 reboot

@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 read -p " This script  assumes you have already installed sudo and are running this script as a user with root privilages"
 read -p "This Script is used to install ZoneMinder CCTV system ; if you are ever prompted to enter your password please do so"
 read -p "This Script MUST be run as root!"
@@ -33,7 +33,7 @@ sudo a2enconf zoneminder
 sudo a2enmod rewrite
 sudo a2enmod cgi # this is done automatically when installing the package.
 sudo sed -i "s/;date.timezone =/date.timezone = $(sed 's/\//\\\//' /etc/timezone)/g" /etc/php/7.0/apache2/php.ini
+sudo zmupdate.pl -f
 sudo systemctl reload apache2
 sudo systemctl start zoneminder
 sudo echo "You are now ready to go with ZoneMinder. Open a browser and type either localhost/zm one the local machine or {IP-OF-ZM-SERVER}/zm if you connect from a remote computer."
-
