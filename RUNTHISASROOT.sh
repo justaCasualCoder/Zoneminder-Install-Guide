@@ -1,14 +1,14 @@
 #!/bin/bash
-if [ "$?" != "1" ];
+if [ $? != "1" ];
 then
 sudo dnf install zenity
 fi
 sudo apt-get -y install zenity
-if [ "$?" != "1" ];
+if [ $? != "1" ];
 then
 sudo yum -y install zenity
 fi
-if [ "$?" != "1" ];
+if [ $? != "1" ];
 then
 sudo pacman -Sy --noconfirm
 sudo pacman -S zenity --noconfirm
@@ -22,12 +22,22 @@ echo ---------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------‎ 
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
 echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ 
-echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎FILE=`dirname $0`/license.txt
-
+echo ‎ ‎ ‎ 
+echo -n "Are you running this script on a Server or Desktop?  : "
+read ServerorDesktop
+while [ $ServerorDesktop != "Server" ] && [ $ServerorDesktop != "Desktop" ] ; do
+  echo Invalid input. Please enter 'Server' or 'Desktop'
+  read ServerorDesktop
+done
+‎‎‎FILE=`dirname $0`/license.txt
+if [ $ServerorDesktop = "Server" ]; then
+echo "Terms And Conditions are at https://github.com/justaCasualCoder/Zoneminder-InstallerGUI/blob/main/license.txt"
+else
 zenity --text-info \
    --title="License" \
    --filename=$FILE \
-   --checkbox="I read and accept the terms." 
+   --checkbox="I read and accept the terms."
+fi 
 export cprt=1
 DIR=$( pwd; )
 USER=$(whoami)
@@ -39,28 +49,28 @@ sudo ./ZoneminderInstallGUI.sh
 sleep 1
 exit 0
 fi
-if [ "$?" != "1" ];
+if [ $? != "1" ];
 then
 sudo dnf install lsb_release
 fi
 sudo apt-get -y install lsb-release
-if [ "$?" != "1" ];
+if [ $? != "1" ];
 then
 sudo yum -y install lsb-release
 fi
-if [ "$?" != "1" ];
+if [ $? != "1" ];
 then
 sudo pacman -Sy --noconfirm
 sudo pacman -S lsb_release --noconfirm
 fi
 
 lsb_release -a | grep -qe buntu
-if [ "$?" = "0" ];
+if [ $? = "0" ];
 then 
 OS=Ubuntu
 fi
 lsb_release -a | grep -qe Fedora
-if [ "$?" = "0" ];
+if [ $? = "0" ];
 then 
 OS=Fedora
 fi
@@ -68,20 +78,25 @@ if [ -f "/etc/SuSE-release" ]; then
 OS=OpenSuSE
 fi
 lsb_release -a | grep -qe Arch
-if [ "$?" = "0" ];
+if [ $? = '0' ];
 then 
 OS="Arch Linux"
 fi
 lsb_release -a | grep -qe Debian
-if [ "$?" = "0" ];
+if [ '$?' = "0" ];
 then
 OS=Debian
 fi
 OS='Ubuntu'
-if [ -z "$OS" ]
+if [ -z $OS ]
 then
-      echo "$Red !ERROR!" "Your OS could not be detected; the manual GUI OS picker will start"
+      echo $Red '!ERROR! Your OS could not be detected; the manual OS picker will start'
+      if [ $ServerorDesktop = "Server" ]; then
+      chmod +x OSPICKERSERVER.sh
+      ./OSPICKERSERVER.sh
+      else
       ./ZoneminderInstallGUI.sh
+      fi
 else
       echo  Your OS is $OS
 fi
@@ -89,7 +104,7 @@ if [ $OS = 'Arch Linux' ];
 then
 sudo pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
-   echo "$Green Yay Is already installed!"
+   echo $Green Yay Is already installed!
 else 
 sudo pacman -Syu
 sudo pacman -S git --noconfirm
@@ -107,10 +122,7 @@ fi
 echo $OS
 if [[ $OS = 'Ubuntu' ]]
 then
-    echo "Are you running this script on Ubuntu Server or Desktop? ( Type Server for Server and Desktop for Desktop)"
-    sleep 3
-    read answer2
-    if [ "$answer2" = "Server" ]; then
+    if [ $ServerorDesktop = "Server" ]; then
     
     sudo chmod +x ZoneminderUBUNTUSERVERINSTALL.sh
     sudo ./ZoneminderUBUNTUSERVERINSTALL.sh
@@ -120,20 +132,18 @@ then
     fi
 fi 
 if [ $OS = 'Fedora' ]; then
-echo "Are you running this script on Fedora Server or Desktop? ( Type Server for Server and Desktop for Desktop"
-read answer2
-    if [ "$answer2" = "Server" ]; then
+    if [ $ServerorDesktop = "Server" ]; then
     sudo chmod +x FedoraServerInstall.sh
     sudo ./FedoraServerInstall.sh
     else
     sudo chmod +x installzoneminderREDHATGENERAL.sh
     sudo ./installzoneminderREDHATGENERAL.sh
 fi
-if [ "$OS" = "OpenSuSE" ]; then
+if [ $OS = "OpenSuSE" ]; then
     sudo chmod +x RHEL-Centos7-installerzoneminder.sh
     sudo ./RHEL-Centos7-installerzoneminder.sh
 fi
-if [ "$OS" = "Debian" ]; then
+if [ $OS = "Debian" ]; then
     sudo chmod +x DebianZoneminderInstaller.sh
     sudo ./DebianZoneminderInstaller.sh
 fi
