@@ -1,4 +1,16 @@
 #!/bin/bash
+if [ $cprt != 1 ]; then
+echo --------------------------------------------------------------------------------
+echo --------------------------------------------------------------------------------
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ Zoneminder Install Script ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ by @justaCasualCoder ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+echo --------------------------------------------------------------------------------
+echo --------------------------------------------------------------------------------‎
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+echo ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎
+fi
+export cprt=1
 DIR=$( pwd; )
 USER=$(whoami)
 red=$(tput setaf 1)
@@ -17,7 +29,7 @@ echo $green "4. Debian"
 echo $green "5. Arch Linux"
 until [ $choice -ge 1 ] && [ $choice -le 6 ]
 do
-echo $red "Now we are going to choose the OS " $reset 
+echo $red "Now we are going to choose the OS " $reset
 read -p "Enter the number corresponding to your operating system: " choice
 case $choice in
   1)
@@ -52,7 +64,7 @@ then
 sudo pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
    echo $Green Yay Is already installed!
-else 
+else
 sudo pacman -Syu
 sudo pacman -S git --noconfirm
 sudo pacman -S fakeroot --noconfirm
@@ -63,7 +75,7 @@ sudo chown -R $USER:$USER ./yay-git
 cd yay-git
 makepkg -si --noconfirm
 sudo chmod +x Arch\ Linux\ install.sh
-sudo ./Arch\ Linux\ Install.sh  
+sudo ./Arch\ Linux\ Install.sh
 fi
 fi
     ;;
