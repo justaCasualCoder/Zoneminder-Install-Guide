@@ -35,7 +35,7 @@ sudo rm /tmp/temp.txt
 read -p " Now we are going to secure the mysql installation ; Please Complete the folowing prompt"
 read -p "Press enter to continue"
 sudo mysql_secure_installation
-sed -i 25 a "define( 'ZM_TIMEZONE', 'America/Chicago' );" /usr/share/zoneminder/www/includes/config.php
+sed -i '8i "define( 'ZM_TIMEZONE', 'America/Chicago' );"' /usr/share/zoneminder/www/includes/config.php
 sudo apt install php libapache2-mod-php php-mysql -y
 sudo add-apt-repository ppa:iconnor/zoneminder-1.36 -y
 sudo apt-get update -y
