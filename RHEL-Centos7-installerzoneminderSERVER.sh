@@ -8,6 +8,9 @@ magenta=$(tput setaf 5)
 cyan=$(tput setaf 6)
 white=$(tput setaf 7)
 reset=$(tput sgr0)
+if [ -z $cprt ]; then
+export cprt=0
+fi
 if [ $cprt != 1 ]; then
 echo --------------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------
