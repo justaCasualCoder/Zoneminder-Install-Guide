@@ -1,5 +1,6 @@
 #!/bin/bash
-figlet Made by @justacasualcoder
+pacman -S figlet --noconfirm
+figlet "Made by @justacasualcoder"
 sudo pacman -S nano --noconfirm
 sudo pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then

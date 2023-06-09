@@ -5,13 +5,13 @@ fi
 if [ $cprt -ne 1 ]; then
 echo --------------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------
-echo     Zoneminder Install Script         
-echo         by @justaCasualCoder     
+echo     Zoneminder Install Script
+echo         by @justaCasualCoder
 echo --------------------------------------------------------------------------------
 echo --------------------------------------------------------------------------------
-echo               
-echo               
-echo               
+echo
+echo
+echo
 fi
 export cprt=1
 read -p "This Script MUST be run as root!"
@@ -43,6 +43,7 @@ read -p " Now we are going to secure the mysql installation ; Please Complete th
 read -p "Press enter to continue"
 # Secure Mysql
 sudo mysql_secure_installation
+sed -i '8i "define( 'ZM_TIMEZONE', 'America/Chicago' );"' /usr/share/zoneminder/www/includes/config.php
 # Set Timezone
 sudo nala install php libapache2-mod-php php-mysql -y
 # Install PHP
@@ -60,7 +61,6 @@ mysql -uroot -p -e "grant lock tables,alter,drop,select,insert,update,delete,cre
 sudo systemctl restart mysql
 # Restart mysql
 nala install zoneminder -y
-sed -i '8i "define( 'ZM_TIMEZONE', 'America/Chicago' );"' /usr/share/zoneminder/www/includes/config.php
 # Install Zoneminder
 chmod 740 /etc/zm/zm.conf
 chown root:www-data /etc/zm/zm.conf
@@ -77,14 +77,14 @@ sudo systemctl start zoneminder
 # Enable and start Zoneminder
 zmupdate.pl -f
 # Updates Zoneminder Mysql THIS IS NEEDED!! IF IT IS NOT DONE, THEN YOU WILL JUST SEE A WHITE PAGE (OR ERROR ON GOOGLE CHROME)
-echo " If the above command did not succesfully execute , please type in the following;            
+echo " If the above command did not succesfully execute , please type in the following;
 sudo -s
 zmupdate.pl -f
 exit"
 sudo systemctl reload apache2
 echo "
 
-    Open up a browser and go to http://$(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}' | sed 's/.\{3\}$//')/zm - it should bring up ZoneMinder Console
+    Open up a browser and go to http://hostname_or_ip/zm - should bring up ZoneMinder Console
 
     (Optional API Check)Open up a tab in the same browser and go to http://hostname_or_ip/zm/api/host/getVersion.json
 
