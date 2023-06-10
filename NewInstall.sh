@@ -118,7 +118,15 @@ wget https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/i
 echo "To start it you can run this command at the / dir : bash initzm.sh"
 }
 Arch_Install() {
-useradd temp
+if ! id -u temp >/dev/null 2>&1; then
+    useradd -g users temp
+    PASS=$(date | md5sum | cut -c1-8)
+    echo "Remember!!!! Temp Pass is $PASS"
+    echo temp:${PASS} | chpasswd
+    echo "temp ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    mkdir /home/temp/
+    chown -R temp:users /home/temp
+fi
 sudo pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
    echo "Yay Is already installed!"
@@ -127,30 +135,51 @@ pacman -S git --noconfirm
 pacman -S fakeroot --noconfirm
 pacman -S make --noconfirm
 cd /opt
-git clone https://aur.archlinux.org/yay-git.git
-chown -R temp:temp ./yay-git
-cd yay-git
-su -u temp makepkg -si --noconfirm
+pacman -S --needed git base-devel
+git clone https://aur.archlinux.org/yay-bin.git
+chown -R temp:users ./yay-bin
+cd yay-bin
+sudo -u  temp -- /bin/makepkg -si --noconfirm
 fi
 pacman -S --noconfirm apache mysql sudo
 pacman -S --noconfirm mysql
 systemctl start mysqld
 systemctl start httpd
-pacman -S --noconfirm php php-apache
+pacman -S --noconfirm php php-apache php-fpm
 echo "Include conf/extra/php_module.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's/^LoadModule mpm_event_module modules\/mod_mpm_event\.so/#&/' /etc/httpd/conf/httpd.conf
 sed -i 's/^#LoadModule mpm_prefork_module modules\/mod_mpm_prefork\.so/LoadModule mpm_prefork_module modules\/mod_mpm_prefork.so/' /etc/httpd/conf/httpd.conf
 sed -i '/^#LoadModule/s/$/\nLoadModule php_module modules\/libphp.so\nAddHandler php-script .php/' /etc/httpd/conf/httpd.conf
 sed -i '$ a Include conf\/extra\/php_module.conf' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
-su -u temp yay -S zoneminder
+su temp -- yay -S zoneminder
 echo "Include conf/extra/zoneminder.conf" >> /etc/httpd/conf/httpd.conf
-sed -i '/LoadModule proxy_module modules/mod_proxy.so/s/^# //' /etc/httpd/conf/httpd.conf
-sed -i '/LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so/s/^# //' /etc/httpd/conf/httpd.conf
-sed -i '/LoadModule rewrite_module modules/mod_rewrite.so/s/^# //' /etc/httpd/conf/httpd.conf
-sed -i '/LoadModule cgid_module modules/mod_cgid.so/s/^# //' /etc/httpd/conf/httpd.conf
+sed -i 's|^#\(LoadModule proxy_module modules/mod_proxy.so\)|\1|' /etc/httpd/conf/httpd.conf
+sed -i 's|^#\(LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so\)|\1|' /etc/httpd/conf/httpd.conf
+sed -i 's|^#\(LoadModule rewrite_module modules/mod_rewrite.so\)|\1|' /etc/httpd/conf/httpd.conf
+sed -i 's|^#\(LoadModule cgid_module modules/mod_cgid.so\)|\1|' /etc/httpd/conf/httpd.conf
+sudo sed -i '$ a\LoadModule cgid_module modules/mod_cgid.so' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
+mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
+cat << EOF | mysql
+BEGIN;
+CREATE DATABASE zm;
+CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
+GRANT ALL ON zm.* TO zmuser@localhost;
+FLUSH PRIVILEGES;
+END;
+EOF
+mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
+sed -i '$ d' /etc/sudoers
 userdel temp
+systemctl start httpd
+systemctl start mysqld
+systemctl start php-fpm
+systemctl start zoneminder
+systemctl enable httpd
+systemctl enable mysqld
+systemctl enable php-fpm
+systemctl enable zoneminder
 }
 Ubuntu_Install() {
 apt update
