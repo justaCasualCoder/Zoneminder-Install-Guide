@@ -117,6 +117,41 @@ cd /
 wget https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/initzm.sh
 echo "To start it you can run this command at the / dir : bash initzm.sh"
 }
+Arch_Install() {
+useradd temp
+sudo pacman -Qe | grep 'yay' &> /dev/null
+if [ $? == 0 ]; then
+   echo "Yay Is already installed!"
+else
+pacman -S git --noconfirm
+pacman -S fakeroot --noconfirm
+pacman -S make --noconfirm
+cd /opt
+git clone https://aur.archlinux.org/yay-git.git
+chown -R temp:temp ./yay-git
+cd yay-git
+su -u temp makepkg -si --noconfirm
+fi
+pacman -S --noconfirm apache mysql sudo
+pacman -S --noconfirm mysql
+systemctl start mysqld
+systemctl start httpd
+pacman -S --noconfirm php php-apache
+echo "Include conf/extra/php_module.conf" >> /etc/httpd/conf/httpd.conf
+sed -i 's/^LoadModule mpm_event_module modules\/mod_mpm_event\.so/#&/' /etc/httpd/conf/httpd.conf
+sed -i 's/^#LoadModule mpm_prefork_module modules\/mod_mpm_prefork\.so/LoadModule mpm_prefork_module modules\/mod_mpm_prefork.so/' /etc/httpd/conf/httpd.conf
+sed -i '/^#LoadModule/s/$/\nLoadModule php_module modules\/libphp.so\nAddHandler php-script .php/' /etc/httpd/conf/httpd.conf
+sed -i '$ a Include conf\/extra\/php_module.conf' /etc/httpd/conf/httpd.conf
+systemctl restart httpd
+su -u temp yay -S zoneminder
+echo "Include conf/extra/zoneminder.conf" >> /etc/httpd/conf/httpd.conf
+sed -i '/LoadModule proxy_module modules/mod_proxy.so/s/^# //' /etc/httpd/conf/httpd.conf
+sed -i '/LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so/s/^# //' /etc/httpd/conf/httpd.conf
+sed -i '/LoadModule rewrite_module modules/mod_rewrite.so/s/^# //' /etc/httpd/conf/httpd.conf
+sed -i '/LoadModule cgid_module modules/mod_cgid.so/s/^# //' /etc/httpd/conf/httpd.conf
+systemctl restart httpd
+userdel temp
+}
 Ubuntu_Install() {
 apt update
 apt install gpgv
@@ -148,7 +183,6 @@ wget "https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/
 chown www-data:www-data zoneminder.conf
 }
 Fedora_Install() {
-#!/bin/bash
 sudo dnf install nano sed httpd mysql mysql-server php php-mysql -y
 sudo service httpd start
 sudo service mysqld start
@@ -185,6 +219,7 @@ if [ $yn = y ]; then
         "Fedora Linux"|"Fedora") Fedora_Install ;; 
         "Ubuntu Linux"|"Ubuntu") Ubuntu_Install ;;
         "Termux"|"Android") termux_install ;; 
+         "Arch"|"Arch Linux") Arch_Install ;;
 esac
 fi
 if [ $yn != y ]; then
