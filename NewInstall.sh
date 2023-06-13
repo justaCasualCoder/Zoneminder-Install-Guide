@@ -29,10 +29,13 @@ elif command -v yum > /dev/null 2>&1; then
 elif command -v pacman > /dev/null 2>&1; then
     DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
     echo "Detected Arch-based distribution: $DISTRO"
+    DISTRO="Arch Linux"
 # Check if the system uses Zypper package manager
 elif command -v zypper > /dev/null 2>&1; then
     DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
     echo "Detected SUSE-based distribution: $DISTRO"
+    echo "This distro is not ready yet  - sorry!"
+    exit 0
 # Check if the system uses Alpine package manager
 elif command -v apk > /dev/null 2>&1; then
     DISTRO="Alpine Linux"
@@ -57,7 +60,7 @@ FLUSH PRIVILEGES;
 END;
 EOF
 echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
-apt update && apt -t bullseye-backports install zoneminder
+apt update && apt -t bullseye-backports install zoneminder -y
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 chgrp -c www-data /etc/zm/zm.conf
 a2enconf zoneminder
@@ -66,12 +69,15 @@ a2enconf zoneminder
 a2enmod rewrite
 a2enmod headers
 a2enmod expires
-a2enmod cg
+a2enmod cgi
 echo "Fixing API.."
-cd /etc/apache2/conf-enabled/
-mv zoneminder.conf zoneminder.conf.bak  
-wget "https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/zoneminder.conf"
-chown www-data:www-data zoneminder.conf
+chown -R www-data:www-data /usr/share/zoneminder
+cat << END >> /etc/apache2/conf-available/zoneminder.conf
+<Directory /usr/share/zoneminder/www/api>
+    AllowOverride All
+</Directory>
+END
+chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 systemctl reload apache2
 }
 termux_install() {
@@ -88,7 +94,7 @@ FLUSH PRIVILEGES;
 END;
 EOF
 echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
-apt update && apt -t bullseye-backports install zoneminder
+apt update && apt -t bullseye-backports install zoneminder -y
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 chgrp -c www-data /etc/zm/zm.conf
 a2enconf zoneminder
@@ -98,11 +104,13 @@ a2enmod rewrite
 a2enmod headers
 a2enmod expires
 echo "Fixing API.."
-cd /etc/apache2/conf-enabled/
-mv zoneminder.conf zoneminder.conf.bak  
-wget "https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/zoneminder.conf"
-chown www-data:www-data zoneminder.conf
-cd /
+chown -R www-data:www-data /usr/share/zoneminder
+cat << END >> /etc/apache2/conf-available/zoneminder.conf
+<Directory /usr/share/zoneminder/www/api>
+    AllowOverride All
+</Directory>
+END
+chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 sed -i 's/80/8080/g' /etc/apache2/ports.conf
 /etc/init.d/mariadb restart
 /etc/init.d/apache2 start
@@ -117,11 +125,37 @@ cd /
 wget https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/initzm.sh
 echo "To start it you can run this command at the / dir : bash initzm.sh"
 }
+Alpine_Install() {
+cat > /etc/apk/repositories << EOF
+http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/main
+http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/community
+EOF
+apk update
+apk add apache2 php81-apache2
+apk add php8-pdo php8-pdo_mysql mariadb mysql-client
+apk add zoneminder
+service mariadb setup
+service mariadb start
+cat << EOF | mysql
+BEGIN;
+CREATE DATABASE zm;
+CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
+GRANT ALL ON zm.* TO zmuser@localhost;
+FLUSH PRIVILEGES;
+EOF
+mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
+apk add php81-fpm php81-pdo php81-pdo_mysq
+sed -i 's/Options None/Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch/' /etc/apache2/httpd.conf
+service mariadb start
+service apache2 start
+service zoneminder start
+echo "ZM Should be all up and running! Access at "$(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}' | sed 's/.\{3\}$//')/zm""
+}
 Arch_Install() {
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
     PASS=$(date | md5sum | cut -c1-8)
-    echo "Remember!!!! Temp Pass is $PASS"
+    read -p "Remember! Temp Pass is $PASS"
     echo temp:${PASS} | chpasswd
     echo "temp ALL=(ALL:ALL) ALL" >> /etc/sudoers
     mkdir /home/temp/
@@ -195,7 +229,7 @@ FLUSH PRIVILEGES;
 END;
 EOF
 add-apt-repository universe
-apt update && apt install zoneminder
+apt update && apt install zoneminder -y
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 # Run this after updates + reinstall php + restart mysql,apache2,and zoneminder
 chgrp -c www-data /etc/zm/zm.conf
@@ -205,30 +239,33 @@ a2enconf zoneminder
 a2enmod rewrite
 a2enmod headers
 a2enmod expires
+systemctl restart apache2
+systemctl enable zoneminder
+systemctl enable apache2
+systemctl enable mysql
 echo "Fixing API.."
-cd /etc/apache2/conf-enabled/
-mv zoneminder.conf zoneminder.conf.bak  
-wget "https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/zoneminder.conf"
-chown www-data:www-data zoneminder.conf
+chown -R www-data:www-data /usr/share/zoneminder
+cat << END >> /etc/apache2/conf-available/zoneminder.conf
+<Directory /usr/share/zoneminder/www/api>
+    AllowOverride All
+</Directory>
+END
+chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 }
 Fedora_Install() {
-sudo dnf install nano sed httpd mysql mysql-server php php-mysql -y
-sudo service httpd start
-sudo service mysqld start
-sudo chkconfig httpd on 
-sudo chkconfig mysqld on
+dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd -y
+service httpd start
+service mariadb start
 sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-dnf install zoneminder-httpd mod-ssl -y
-mysql -u root -p < /usr/share/zoneminder/db/zm_create.sql
+dnf install zoneminder-httpd -y
+mysql < /usr/share/zoneminder/db/zm_create.sql
 cat << EOF | mysql
 BEGIN;
-CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
 GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 END;
 EOF
-mysqladmin -uroot -p reload
 setenforce 0
 sed -i 25 a "define( 'ZM_TIMEZONE', 'America/Chicago' );" /usr/share/zoneminder/www/includes/config.php
 sudo ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
@@ -245,10 +282,12 @@ echo -n "Are you sure you want to install Zoneminder? [y/n]: " ; read yn
 if [ $yn = y ]; then
     case $DISTRO in
         "Debian"|"Debian Linux") Debian_Install ;;
-        "Fedora Linux"|"Fedora") Fedora_Install ;; 
+        "Fedora Linux"|"Fedora") echo "Fedora isnt ready yet - sorry!" && exit 0 ;; #Fedora_Install ;; 
         "Ubuntu Linux"|"Ubuntu") Ubuntu_Install ;;
         "Termux"|"Android") termux_install ;; 
-         "Arch"|"Arch Linux") Arch_Install ;;
+        "Arch"|"Arch Linux") Arch_Install ;;
+        "Alpine Linux"|"Alpine") Alpine_Install ;;
+       
 esac
 fi
 if [ $yn != y ]; then

@@ -1,17 +1,9 @@
-#REDO IN PROGRESS - VERY UNSTABLE
+# Zoneminder Install Script
+This repository contains a script to install Zoneminder and a [LAMP](https://en.wikipedia.org/wiki/LAMP_(software_bundle)) Stack on the following linux distributions - 
+- Alpine Linux
+- Arch Linux
+- Ubuntu Linux
+- Android ( [Termux](https://termux.dev/) Debian Proot - [My Install Scripts](https://github.com/justaCasualCoder/Zoneminder-Termux) )
+- Debian Linux
 
-
-
-
-
-# Old  Zoneminder-InstallerGUI
-This is just a simple repository containing Zoneminder install scripts.
-It has currently only been tested on Ubuntu 22.04 , Debain 11 , and Fedora 36
-
-
-### You need to run this command inside the folder in order for the files to run correctly
-```
-sudo chmod +x NewInstall.sh
-```
-When you run the GUI it will automatically make the other files required executable
-
+Fedora on the way!
