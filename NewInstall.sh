@@ -24,6 +24,8 @@ if command -v apt-get > /dev/null 2>&1; then
 # Check if the system uses Red Hat package manager
 elif command -v yum > /dev/null 2>&1; then
     DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+    DISTRO=${DISTRO%\"}  # Remove leading double quote
+    DISTRO=${DISTRO#\"}  # Remove trailing double quote
     echo "Detected Red Hat-based distribution: $DISTRO"
 # Check if the system uses Pacman package manager
 elif command -v pacman > /dev/null 2>&1; then
@@ -57,7 +59,6 @@ CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
 GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
-END;
 EOF
 echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
 apt update && apt -t bullseye-backports install zoneminder -y
@@ -91,7 +92,6 @@ CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
 GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
-END;
 EOF
 echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
 apt update && apt -t bullseye-backports install zoneminder -y
@@ -201,7 +201,6 @@ CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
 GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
-END;
 EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 sed -i '$ d' /etc/sudoers
@@ -226,7 +225,6 @@ CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
 GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
-END;
 EOF
 add-apt-repository universe
 apt update && apt install zoneminder -y
@@ -254,40 +252,41 @@ chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 }
 Fedora_Install() {
 dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd -y
-service httpd start
-service mariadb start
-sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
+systemctl start httpd
+systemctl start mariadb
+dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
 dnf install zoneminder-httpd -y
+ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
+dnf install mod_ssl -y
 mysql < /usr/share/zoneminder/db/zm_create.sql
 cat << EOF | mysql
 BEGIN;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
 GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
-END;
 EOF
 setenforce 0
-sed -i 25 a "define( 'ZM_TIMEZONE', 'America/Chicago' );" /usr/share/zoneminder/www/includes/config.php
-sudo ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
-sudo systemctl enable httpd
-sudo systemctl start httpd
-sudo systemctl enable zoneminder
-sudo systemctl start zoneminder
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --permanent --add-service=https
-sed -i 's/enforcing/disabled/g' /etc/selinux/config
+# Temporary fix to make gui work - with proparly fix in future
+mkdir /usr/share/zoneminder/www/skins/classic/css/fonts 
+ln /usr/share/zoneminder/www/fonts/* /usr/share/zoneminder/www/skins/classic/css/fonts/
+systemctl enable httpd
+systemctl restart httpd
+systemctl enable zoneminder
+systemctl start zoneminder
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd  --add-service=http --add-service=https
 zmupdate.pl -f
 }
 echo -n "Are you sure you want to install Zoneminder? [y/n]: " ; read yn
 if [ $yn = y ]; then
     case $DISTRO in
         "Debian"|"Debian Linux") Debian_Install ;;
-        "Fedora Linux"|"Fedora") echo "Fedora isnt ready yet - sorry!" && exit 0 ;; #Fedora_Install ;; 
+        "Fedora Linux"|"Fedora") Fedora_Install ;; 
         "Ubuntu Linux"|"Ubuntu") Ubuntu_Install ;;
         "Termux"|"Android") termux_install ;; 
         "Arch"|"Arch Linux") Arch_Install ;;
         "Alpine Linux"|"Alpine") Alpine_Install ;;
-       
 esac
 fi
 if [ $yn != y ]; then

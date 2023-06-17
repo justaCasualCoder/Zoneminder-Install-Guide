@@ -5,5 +5,6 @@ This repository contains a script to install Zoneminder and a [LAMP](https://en.
 - Ubuntu Linux
 - Android ( [Termux](https://termux.dev/) Debian Proot - [My Install Scripts](https://github.com/justaCasualCoder/Zoneminder-Termux) )
 - Debian Linux
+- Fedora Linux
 
-Fedora on the way!
+Currently the most stable distro to install on is : **Debian**
