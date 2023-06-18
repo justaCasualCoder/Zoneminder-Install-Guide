@@ -1,6 +1,6 @@
 #!/bin/bash
 RED='\033[0;31m'
-# Known OS'es - Debian,Centos,Fedora,Ubuntu
+# Current working systems - OpenSuSE , Ubuntu , Fedora , Arch Linux , Debian , Alpine Linux
 [[ $(ps -ef|grep -c com.termux ) -gt 1 ]] && echo "Wow! Your on Termux!" && DISTRO="Termux"
 install_evserver() {
 apt install git -y
@@ -36,8 +36,7 @@ elif command -v pacman > /dev/null 2>&1; then
 elif command -v zypper > /dev/null 2>&1; then
     DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
     echo "Detected SUSE-based distribution: $DISTRO"
-    echo "This distro is not ready yet  - sorry!"
-    exit 0
+    DISTRO="OpenSuSE"
 # Check if the system uses Alpine package manager
 elif command -v apk > /dev/null 2>&1; then
     DISTRO="Alpine Linux"
@@ -250,6 +249,30 @@ cat << END >> /etc/apache2/conf-available/zoneminder.conf
 END
 chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 }
+suse_Install() {
+zypper addrepo https://download.opensuse.org/repositories/security:zoneminder/openSUSE_Tumbleweed/security:zoneminder.repo
+zypper --gpg-auto-import-keys refresh
+zypper -n refresh
+zypper -n install apache2 php php-mysql php-gd php-mbstring apache2-mod_php8 mariadb mariadb-client ZoneMinder php8-intl
+systemctl start apache2
+systemctl start mariadb
+a2enmod rewrite
+a2enmod headers
+a2enmod expires
+a2enmod php8
+cat << EOF | mariadb
+BEGIN;
+CREATE DATABASE zm;
+CREATE USER zm_admin@localhost IDENTIFIED BY 'zmpass';
+GRANT ALL ON zm.* TO zm_admin@localhost;
+FLUSH PRIVILEGES;
+EOF
+mariadb -u zm_admin -pzmpass < /usr/share/zoneminder/db/zm_create.sql
+systemctl restart apache2 mariadb
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --reload
+}
 Fedora_Install() {
 dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd -y
 systemctl start httpd
@@ -287,6 +310,7 @@ if [ $yn = y ]; then
         "Termux"|"Android") termux_install ;; 
         "Arch"|"Arch Linux") Arch_Install ;;
         "Alpine Linux"|"Alpine") Alpine_Install ;;
+        "OpenSuSE"|"OpenSuSe") suse_Install ;;
 esac
 fi
 if [ $yn != y ]; then
