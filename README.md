@@ -10,4 +10,4 @@ This repository contains a script to install Zoneminder and a [LAMP](https://en.
 
 Currently the most stable distro to install on is : **Debian**
 
-If you would like a support for a Linux distro , create a issue and i will try to add support
+If you would like a support for a Linux distro , create a issue and i will try to add support!
