@@ -150,6 +150,40 @@ service apache2 start
 service zoneminder start
 echo "ZM Should be all up and running! Access at "$(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}' | sed 's/.\{3\}$//')/zm""
 }
+TrueNas_Install() {
+export ASSUME_ALWAYS_YES=yes
+pkg install apache24
+sysrc apache24_enable="YES"
+service apache24 start
+pkg install mariadb106-server-10.6.13
+sysrc mysql_enable="YES"
+service mysql-server start
+pkg install php82 php82-mysqli mod_php82
+cp /usr/local/etc/php.ini-production /usr/local/etc/php.ini
+rehash
+cat << EOF >> /usr/local/etc/apache24/modules.d/001_mod-php.conf
+<IfModule dir_module>
+    DirectoryIndex index.php index.html
+    <FilesMatch "\.php$">
+        SetHandler application/x-httpd-php
+    </FilesMatch>
+    <FilesMatch "\.phps$">
+        SetHandler application/x-httpd-php-source
+    </FilesMatch>
+</IfModule>
+EOF
+apachectl restart
+echo "<?php phpinfo(); ?>" >> "/usr/local/www/apache24/data/info.php"
+pkg install zoneminder
+cat << EOF | mysql
+BEGIN;
+CREATE DATABASE zm;
+CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
+GRANT ALL ON zm.* TO zmuser@localhost;
+FLUSH PRIVILEGES;
+EOF
+mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
+}
 Arch_Install() {
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
