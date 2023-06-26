@@ -11,3 +11,9 @@ This repository contains a script to install Zoneminder and a [LAMP](https://en.
 Currently the most stable distro to install on is : **Debian**
 
 If you would like a support for a Linux distro , create a issue and i will try to add support!
+
+## Docker
+Docker is now working - it is a very early image based on Debian - you can use it by running
+```
+docker run --network=host -d ghcr.io/justacasualcoder/zoneminder-installerscript:main
+```
