@@ -9,7 +9,7 @@ FLUSH PRIVILEGES;
 EOF
 RUN echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list && apt update && apt -t bullseye-backports install zoneminder -y
 RUN service mariadb start && mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
-RUN chgrp -c www-data /etc/zm/zm.conf && adduser www-data video && a2enconf zoneminder && a2enmod rewrite && a2enmod headers && a2enmod expires
+RUN chgrp -c www-data /etc/zm/zm.conf && adduser www-data video && a2enconf zoneminder && a2enmod rewrite && a2enmod headers && a2enmod expires && a2enmod cgi
 RUN chown -R www-data:www-data /usr/share/zoneminder
 RUN echo "<Directory /usr/share/zoneminder/www/api>" >> /etc/apache2/conf-available/zoneminder.conf && echo "    AllowOverride All" >> /etc/apache2/conf-available/zoneminder.conf && echo "</Directory>" >> /etc/apache2/conf-available/zoneminder.conf
 RUN chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
