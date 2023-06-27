@@ -17,4 +17,4 @@ Docker is now working - it is a very early image based on Debian - you can use i
 ```
 docker run --network=host -d ghcr.io/justacasualcoder/zoneminder-installerscript:main
 ```
-It will start apache2,mariadb,and zoneminder inside the container
+It will start Apache2 Mariadb and Zoneminder inside the container
