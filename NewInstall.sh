@@ -194,7 +194,7 @@ if ! id -u temp >/dev/null 2>&1; then
     mkdir /home/temp/
     chown -R temp:users /home/temp
 fi
-sudo pacman -Qe | grep 'yay' &> /dev/null
+pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
    echo "Yay Is already installed!"
 else

@@ -1,5 +1,11 @@
 FROM debian:11
-RUN apt update && apt install apache2 mariadb-server php gpgv libapache2-mod-php php-mysql lsb-release gnupg2 -y
+#ARG ENV_FILE=./zm_config_docker
+#ENV $(cat $ENV_FILE | grep -v ^# | xargs)
+RUN apt update && apt install apache2 openssl mariadb-server php gpgv libapache2-mod-php php-mysql lsb-release gnupg2 -y
+COPY openssl.cnf /etc/ssl/openssl.cnf
+RUN openssl req -x509 -nodes -days 2190 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt 
+RUN sed -i '/^\s*SSLRandomSeed/s/^/#/' /etc/apache2/mods-available/ssl.conf && sed -i '/<IfModule mod_ssl.c>/a\        SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt'  /etc/apache2/mods-available/ssl.conf  && sed -i '/<IfModule mod_ssl.c>/a\        SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key'  /etc/apache2/mods-available/ssl.conf  &&  a2ensite default-ssl
+RUN a2enmod ssl
 RUN service mariadb start && cat <<EOF | mariadb
 BEGIN;
 CREATE DATABASE zm;

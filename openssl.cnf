@@ -1,0 +1,16 @@
+# Example OpenSSL conf file
+
+[default]
+countryName = US
+stateOrProvinceName = California
+commonName = example.com
+
+[req]
+prompt = no
+distinguished_name = req_distinguished_name
+
+[req_distinguished_name]
+countryName = US
+stateOrProvinceName = California
+organizationName = "MyZMDocker"
+commonName = www.example.com

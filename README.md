@@ -7,6 +7,7 @@ This repository contains a script to install Zoneminder and a [LAMP](https://en.
 - Debian Linux
 - Fedora Linux
 - OpenSuSE TumbleWeed
+- Most other systems using Docker
 
 Currently the most stable distro to install on is : **Debian**
 
