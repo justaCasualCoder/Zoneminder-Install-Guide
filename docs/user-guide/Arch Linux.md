@@ -10,7 +10,7 @@ This should work on any install of Arch Linux
         git clone https://aur.archlinux.org/yay-bin.git
         chown -R temp:users ./yay-bin
         cd yay-bin
-        /bin/makepkg -si
+        makepkg -si
 
          
 

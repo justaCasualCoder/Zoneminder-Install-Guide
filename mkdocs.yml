@@ -13,6 +13,8 @@ nav:
     - 'About': 'about.md'
 theme:
   name: material
+  features:
+    - content.code.copy
 repo_url: https://github.com/justaCasualCoder/Zoneminder-InstallerScript
 markdown_extensions:
   - pymdownx.highlight:
@@ -22,4 +24,3 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
-
