@@ -41,7 +41,7 @@ elif command -v zypper > /dev/null 2>&1; then
 elif command -v apk > /dev/null 2>&1; then
     DISTRO="Alpine Linux"
     echo "Detected Alpine Linux distribution"
-    echo "Installing On Alpine may be a little tricky..."
+    #echo "Installing On Alpine may be a little tricky..."
 # If all else fails, fall back to reading /etc/issue file
 else
     DISTRO=$(cat /etc/issue | awk '{print $1}')
@@ -49,8 +49,7 @@ else
 fi
 Debian_Install() {
 apt update
-apt install gpgv
-apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
+apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 gpgv -y
 systemctl start mariadb
 cat << EOF | mysql
 BEGIN;
@@ -130,9 +129,10 @@ http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,
 http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/community
 EOF
 apk update
-apk add apache2 php81-apache2
-apk add php8-pdo php8-pdo_mysql mariadb mysql-client
+apk add apache2 php81-apache2 php8-pdo php8-pdo_mysql mariadb mysql-client  php81-fpm php81-pdo php81-pdo_mysql
 apk add zoneminder
+# apk add php8-pdo php8-pdo_mysql mariadb mysql-client
+# apk add zoneminder
 service mariadb setup
 service mariadb start
 cat << EOF | mysql
@@ -143,7 +143,7 @@ GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
-apk add php81-fpm php81-pdo php81-pdo_mysq
+# apk add php81-fpm php81-pdo php81-pdo_mysql
 sed -i 's/Options None/Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch/' /etc/apache2/httpd.conf
 service mariadb start
 service apache2 start
@@ -198,21 +198,15 @@ pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
    echo "Yay Is already installed!"
 else
-pacman -S git --noconfirm
-pacman -S fakeroot --noconfirm
-pacman -S make --noconfirm
+pacman -S fakeroot make git base-devel --noconfirm
 cd /opt
-pacman -S --needed git base-devel
 git clone https://aur.archlinux.org/yay-bin.git
 chown -R temp:users ./yay-bin
 cd yay-bin
 sudo -u  temp -- /bin/makepkg -si --noconfirm
 fi
-pacman -S --noconfirm apache mysql sudo
-pacman -S --noconfirm mysql
-systemctl start mysqld
-systemctl start httpd
-pacman -S --noconfirm php php-apache php-fpm
+pacman -S --noconfirm apache mysql sudo php php-apache php-fpm
+systemctl start mysqld httpd
 echo "Include conf/extra/php_module.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's/^LoadModule mpm_event_module modules\/mod_mpm_event\.so/#&/' /etc/httpd/conf/httpd.conf
 sed -i 's/^#LoadModule mpm_prefork_module modules\/mod_mpm_prefork\.so/LoadModule mpm_prefork_module modules\/mod_mpm_prefork.so/' /etc/httpd/conf/httpd.conf
@@ -288,8 +282,6 @@ zypper addrepo https://download.opensuse.org/repositories/security:zoneminder/op
 zypper --gpg-auto-import-keys refresh
 zypper -n refresh
 zypper -n install apache2 php php-mysql php-gd php-mbstring apache2-mod_php8 mariadb mariadb-client ZoneMinder php8-intl
-systemctl start apache2
-systemctl start mariadb
 a2enmod rewrite
 a2enmod headers
 a2enmod expires
@@ -302,19 +294,17 @@ GRANT ALL ON zm.* TO zm_admin@localhost;
 FLUSH PRIVILEGES;
 EOF
 mariadb -u zm_admin -pzmpass < /usr/share/zoneminder/db/zm_create.sql
-systemctl restart apache2 mariadb
+systemctl start apache2 mariadb
 firewall-cmd --permanent --add-port=80/tcp
 firewall-cmd --permanent --add-port=443/tcp
 firewall-cmd --reload
 }
 Fedora_Install() {
-dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd -y
+dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
+dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd zoneminder-httpd mod_ssl -y
+ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
 systemctl start httpd
 systemctl start mariadb
-dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-dnf install zoneminder-httpd -y
-ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
-dnf install mod_ssl -y
 mysql < /usr/share/zoneminder/db/zm_create.sql
 cat << EOF | mysql
 BEGIN;
@@ -326,14 +316,25 @@ setenforce 0
 # Temporary fix to make gui work - with proparly fix in future
 mkdir /usr/share/zoneminder/www/skins/classic/css/fonts 
 ln /usr/share/zoneminder/www/fonts/* /usr/share/zoneminder/www/skins/classic/css/fonts/
-systemctl enable httpd
-systemctl restart httpd
-systemctl enable zoneminder
-systemctl start zoneminder
+systemctl start httpd zoneminder mariadb
+systemctl enable httpd zoneminder mariadb
 firewall-cmd --permanent --add-service=http
 firewall-cmd --permanent --add-service=https
 firewall-cmd  --add-service=http --add-service=https
 zmupdate.pl -f
+}
+Gentoo_Install() {
+emerge app-eselect/eselect-repository
+eselect repository enable oubliette
+emaint sync -r oubliette
+emerge dev-db/mariadb
+emerge --config dev-db/mariadb
+echo APACHE2_MODULES="cgi" >> /etc/portage/make.conf
+emerge www-servers/apache
+emerge php
+emerge zoneminder
+rc-update add mysql default
+rc-update add zoneminder default
 }
 echo -n "Are you sure you want to install Zoneminder? [y/n]: " ; read yn
 if [ $yn = y ]; then

@@ -16,6 +16,6 @@ If you would like a support for a Linux distro , create a issue and i will try t
 ## Docker
 Docker is now working - it is a very early image based on Debian - you can use it by running
 ```
-docker run --network=host -d ghcr.io/justacasualcoder/zoneminder-installerscript:main
+docker run -d ghcr.io/justacasualcoder/zoneminder-installerscript:main
 ```
 It will start Apache2 Mariadb and Zoneminder inside the container
