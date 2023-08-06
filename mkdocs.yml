@@ -1,0 +1,25 @@
+site_name: Zoneminder-InstallerScript
+nav:
+  - Home: 'index.md'
+  - 'Installation Guide':
+    - 'Alpine Linux': 'user-guide/Alpine.md'
+    - 'Arch Linux': 'user-guide/Arch Linux.md'
+    - 'Debian': 'user-guide/Debian.md'
+    - 'Fedora': 'user-guide/Fedora.md'
+    - 'OpenSUSE': 'user-guide/OpenSUSE.md'
+    - 'Ubuntu': 'user-guide/Ubuntu.md'
+  - About:
+    - 'License': 'LICENSE.txt'
+    - 'About': 'about.md'
+theme:
+  name: material
+repo_url: https://github.com/justaCasualCoder/Zoneminder-InstallerScript
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
