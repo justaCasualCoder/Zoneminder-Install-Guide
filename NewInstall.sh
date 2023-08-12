@@ -47,7 +47,84 @@ else
     DISTRO=$(cat /etc/issue | awk '{print $1}')
     echo "Unable to detect package manager, falling back to /etc/issue: $DISTRO"
 fi
-Debian_Install() {
+Debian12_Install() {
+# From https://wiki.zoneminder.com/Debian_12_Bookworm_with_Zoneminder_1.36.33
+apt update 
+apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
+apt install zoneminder -y
+mysql -uroot  < /usr/share/zoneminder/db/zm_create.sql
+mysql -uroot  -e "grant all on zm.* to 'zmuser'@localhost identified by 'zmpass';"
+mysqladmin -uroot reload
+chmod 640 /etc/zm/zm.conf
+chown root:www-data /etc/zm/zm.conf
+chown -R www-data:www-data /var/cache/zoneminder/
+chmod 755 /var/cache/zoneminder/
+cp /etc/apache2/conf-available/zoneminder.conf /etc/apache2/conf-available/zoneminder.conf.bak 
+rm /etc/apache2/conf-available/zoneminder.conf
+cat << EOF >> /etc/apache2/conf-available/zoneminder.conf
+# Remember to enable cgi mod (i.e. "a2enmod cgi").
+ScriptAlias /zm/cgi-bin "/usr/lib/zoneminder/cgi-bin"
+<Directory "/usr/lib/zoneminder/cgi-bin">
+    Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+    AllowOverride All
+    Require all granted
+</Directory>
+
+
+# Order matters. This alias must come first.
+Alias /zm/cache "/var/cache/zoneminder"
+<Directory "/var/cache/zoneminder">
+    Options -Indexes +FollowSymLinks
+    AllowOverride None
+    <IfModule mod_authz_core.c>
+        # Apache 2.4
+        Require all granted
+    </IfModule>
+</Directory>
+
+Alias /zm /usr/share/zoneminder/www
+<Directory /usr/share/zoneminder/www>
+  Options -Indexes +FollowSymLinks
+  <IfModule mod_dir.c>
+    DirectoryIndex index.php
+  </IfModule>
+</Directory>
+
+# For better visibility, the following directives have been migrated from the
+# default .htaccess files included with the CakePHP project.
+# Parameters not set here are inherited from the parent directive above.
+<Directory "/usr/share/zoneminder/www/api">
+   RewriteEngine on
+   RewriteRule ^$ app/webroot/ [L]
+   RewriteRule (.*) app/webroot/$1 [L]
+   RewriteBase /zm/api
+</Directory>
+
+<Directory "/usr/share/zoneminder/www/api/app">
+   RewriteEngine on
+   RewriteRule ^$ webroot/ [L]
+   RewriteRule (.*) webroot/$1 [L]
+   RewriteBase /zm/api
+</Directory>
+
+<Directory "/usr/share/zoneminder/www/api/app/webroot">
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+    RewriteBase /zm/api
+</Directory>
+EOF
+adduser www-data video
+systemctl enable --now zoneminder
+a2enconf zoneminder
+a2enmod rewrite
+a2enmod headers
+a2enmod expires
+a2enmod cgi
+service apache2 reload
+}
+Debian11_Install() {
 apt update
 apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 gpgv -y
 systemctl start mariadb
@@ -206,6 +283,7 @@ cd yay-bin
 sudo -u  temp -- /bin/makepkg -si --noconfirm
 fi
 pacman -S --noconfirm apache mysql sudo php php-apache php-fpm
+mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
 systemctl start mysqld httpd
 echo "Include conf/extra/php_module.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's/^LoadModule mpm_event_module modules\/mod_mpm_event\.so/#&/' /etc/httpd/conf/httpd.conf
@@ -213,7 +291,9 @@ sed -i 's/^#LoadModule mpm_prefork_module modules\/mod_mpm_prefork\.so/LoadModul
 sed -i '/^#LoadModule/s/$/\nLoadModule php_module modules\/libphp.so\nAddHandler php-script .php/' /etc/httpd/conf/httpd.conf
 sed -i '$ a Include conf\/extra\/php_module.conf' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
-su temp -- yay -S zoneminder
+# echo y | yay --noprovides --answerdiff None --answerclean None --mflags "--noconfirm" zoneminder
+export PATH=$PATH:/usr/bin/core_perl/
+sudo -E -u temp --  yay -S zoneminder
 echo "Include conf/extra/zoneminder.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_module modules/mod_proxy.so\)|\1|' /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so\)|\1|' /etc/httpd/conf/httpd.conf
@@ -221,7 +301,6 @@ sed -i 's|^#\(LoadModule rewrite_module modules/mod_rewrite.so\)|\1|' /etc/httpd
 sed -i 's|^#\(LoadModule cgid_module modules/mod_cgid.so\)|\1|' /etc/httpd/conf/httpd.conf
 sudo sed -i '$ a\LoadModule cgid_module modules/mod_cgid.so' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
-mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
 cat << EOF | mysql
 BEGIN;
 CREATE DATABASE zm;
@@ -339,7 +418,7 @@ rc-update add zoneminder default
 echo -n "Are you sure you want to install Zoneminder? [y/n]: " ; read yn
 if [ $yn = y ]; then
     case $DISTRO in
-        "Debian"|"Debian Linux") Debian_Install ;;
+        "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
         "Fedora Linux"|"Fedora") Fedora_Install ;; 
         "Ubuntu Linux"|"Ubuntu") Ubuntu_Install ;;
         "Termux"|"Android") termux_install ;; 

@@ -11,10 +11,6 @@ nav:
   - About:
     - 'License': 'LICENSE.txt'
     - 'About': 'about.md'
-theme:
-  name: material
-  features:
-    - content.code.copy
 repo_url: https://github.com/justaCasualCoder/Zoneminder-InstallerScript
 markdown_extensions:
   - pymdownx.highlight:
@@ -22,5 +18,12 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
+#  - pymdownx.snippets
+#  - pymdownx.superfences
+
+
+theme:
+    name: material
+    highlightjs: true
+    hljs_languages:
+        - bash

@@ -5,10 +5,10 @@ This should work on any install of Arch Linux
 1. Install yay
 
 
-        pacman -S fakeroot make git base-devel
+        sudo pacman -S fakeroot make git base-devel
         cd /opt
         git clone https://aur.archlinux.org/yay-bin.git
-        chown -R temp:users ./yay-bin
+        sudo chown -R $(whoami):$(whoami) ./yay-bin
         cd yay-bin
         makepkg -si
 
@@ -18,7 +18,7 @@ This should work on any install of Arch Linux
 2. Install MySQL , PHP , and Apache
 
 
-        pacman -S --noconfirm apache mysql sudo php php-apache php-fpm
+        sudo pacman -S apache mysql sudo php php-apache php-fpm
 
 
 3. Enable Apache2 Modules
