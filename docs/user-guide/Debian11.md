@@ -1,13 +1,14 @@
-# Ubuntu Linux
+# Debian Linux
 
-This should work on Ubuntu 20/21/22/23
+This should work for Debian 11
 
 1. Update & install  Apache , PHP , and MariaDB
   ```bash
   apt update
   apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 gpgv -y
   ```
-2. Set up MariaDB database
+
+1. Set up MariaDB database
   ```bash
   cat << EOF | mysql
   BEGIN;
@@ -17,15 +18,14 @@ This should work on Ubuntu 20/21/22/23
   FLUSH PRIVILEGES;
   EOF
   ```
-
 3. Install Zoneminder & create MariaDB ZM database
   ```bash
-  add-apt-repository universe
-  apt update 
-  apt install zoneminder -y
+  echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
+  apt update && apt -t bullseye-backports install zoneminder -y
   mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
   chgrp -c www-data /etc/zm/zm.conf
   ```
+
 4. Enable Apache modules
   ```bash
   a2enconf zoneminder
@@ -36,6 +36,7 @@ This should work on Ubuntu 20/21/22/23
   a2enmod expires
   a2enmod cgi
   ```
+
 5. Start & Enable everything
   ```bash
   systemctl start apache2 zoneminder mariadb
