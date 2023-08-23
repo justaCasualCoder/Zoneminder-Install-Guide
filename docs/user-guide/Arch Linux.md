@@ -27,11 +27,13 @@
   ```
 4. Install Zoneminder & start Apache 
   ```bash
+  export PATH=$PATH:/usr/bin/core_perl/
   yay -S zoneminder
   systemctl restart httpd
   ```
 5. Set up MySQL Database
   ```bash
+  systemctl start mariadb
   mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
   cat << EOF | mysql
   BEGIN;
