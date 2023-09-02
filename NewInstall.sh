@@ -5,7 +5,7 @@ RED='\033[0;31m'
 install_evserver() {
 apt install git -y
 git clone https://github.com/zoneminder/zmeventnotification.git
-cd zmeventnotification
+cd zmeventnotification || exit 1
 sudo perl -MCPAN -e "install Crypt::MySQL"
 sudo perl -MCPAN -e "install Config::IniFiles"
 sudo perl -MCPAN -e "install Crypt::Eksblowfish::Bcrypt"
@@ -191,7 +191,7 @@ sed -i 's/80/8080/g' /etc/apache2/ports.conf
 /etc/init.d/apache2 start
 /etc/init.d/zoneminder start
 echo -n "Would you like to make Zoneminder start automatically on startup? (just adds the above command to .profile) [y/n]: " ; read answer
-if [ $answer == y ]; then
+if [ "$answer" == y ]; then
     echo "/etc/init.d/apache2 start" >> ~/.profile
     echo "/etc/init.d/mariadb start" >> ~/.profile
     echo "/etc/init.d/zoneminder start" >> ~/.profile
@@ -262,12 +262,14 @@ EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 }
 Arch_Install() {
+pacman -Sy
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
     PASS=$(date | md5sum | cut -c1-8)
-    read -p "Remember! Temp Pass is $PASS"
+    # read -p "Remember! Temp Pass is $PASS"
     echo temp:${PASS} | chpasswd
-    echo "temp ALL=(ALL:ALL) ALL" >> /etc/sudoers
+#    echo "temp ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    echo "temp ALL=(ALL:ALL) NOPASSWD: /bin/yay, /bin/pacman" >> /etc/sudoers
     mkdir /home/temp/
     chown -R temp:users /home/temp
 fi
@@ -276,13 +278,20 @@ if [ $? == 0 ]; then
    echo "Yay Is already installed!"
 else
 pacman -S fakeroot make git base-devel --noconfirm
-cd /opt
-git clone https://aur.archlinux.org/yay-bin.git
-chown -R temp:users ./yay-bin
-cd yay-bin
+cd /opt || exit 1
+mkdir yay
+chown temp:users yay
+git clone https://aur.archlinux.org/yay-bin.git yay
+chown -R temp:users ./yay
+cd yay ||  { echo "Failed to clone"; echo "exit 3"; }
 sudo -u  temp -- /bin/makepkg -si --noconfirm
 fi
-pacman -S --noconfirm apache mysql sudo php php-apache php-fpm
+pacman -S --noconfirm apache mariadb sudo php php-apache php-fpm
+echo "Fixing PHP intl:"
+pacman -S --noconfirm icu
+sudo -E -u temp -- yay -S icu72 --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
+systemctl restart httpd
+# Setup MariaDB and php modules
 mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
 systemctl start mysqld httpd
 echo "Include conf/extra/php_module.conf" >> /etc/httpd/conf/httpd.conf
@@ -293,7 +302,11 @@ sed -i '$ a Include conf\/extra\/php_module.conf' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
 # echo y | yay --noprovides --answerdiff None --answerclean None --mflags "--noconfirm" zoneminder
 export PATH=$PATH:/usr/bin/core_perl/
-sudo -E -u temp --  yay -S zoneminder
+# sudo -E -u temp --  yay -S zoneminder
+# Install Zoneminder
+sudo -E -u temp --  yay -S zoneminder --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
+sed -i "7,9 {s/^/#/}" /etc/httpd/conf/extra/zoneminder.conf
+# enable httpd modules
 echo "Include conf/extra/zoneminder.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_module modules/mod_proxy.so\)|\1|' /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so\)|\1|' /etc/httpd/conf/httpd.conf
@@ -301,7 +314,8 @@ sed -i 's|^#\(LoadModule rewrite_module modules/mod_rewrite.so\)|\1|' /etc/httpd
 sed -i 's|^#\(LoadModule cgid_module modules/mod_cgid.so\)|\1|' /etc/httpd/conf/httpd.conf
 sudo sed -i '$ a\LoadModule cgid_module modules/mod_cgid.so' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
-cat << EOF | mysql
+# Setup mariadb
+cat << EOF | mariadb
 BEGIN;
 CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';

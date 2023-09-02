@@ -1,15 +1,22 @@
 1. Install yay
   ```bash
-  sudo pacman -S fakeroot make git base-devel
+  sudo pacman -S fakeroot make git base-devel glibc
   cd /opt
-  git clone https://aur.archlinux.org/yay-bin.git
-  sudo chown -R $(whoami):$(whoami) ./yay-bin
-  cd yay-bin
+  sudo mkdir yay
+  sudo chown $(whoami):$(whoami) yay
+  git clone https://aur.archlinux.org/yay-bin.git yay
+  cd yay
   makepkg -si
   ```
 2. Install MySQL , PHP , and Apache
   ```bash
   sudo pacman -S apache mysql sudo php php-apache php-fpm
+  ```
+3. Fix PHP intl.
+  ```bash
+  sudo pacman -S icu 
+  yay -S icu72 --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
+  systemctl restart httpd
   ```
 3. Enable Apache2 Modules
   ```bash
@@ -29,13 +36,14 @@
   ```bash
   export PATH=$PATH:/usr/bin/core_perl/
   yay -S zoneminder
-  systemctl restart httpd
+  sudo sed -i "7,9 {s/^/#/}" /etc/httpd/conf/extra/zoneminder.conf
+  sudo systemctl restart httpd
   ```
 5. Set up MySQL Database
   ```bash
-  systemctl start mariadb
-  mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
-  cat << EOF | mysql
+  sudo mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
+  sudo systemctl start mariadb
+  cat << EOF | sudo mysql
   BEGIN;
   CREATE DATABASE zm;
   CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
@@ -46,12 +54,13 @@
   ```
 6. Start & Enable everything
   ```bash
-  systemctl start httpd
-  systemctl start mysqld
-  systemctl start php-fpm
-  systemctl start zoneminder
-  systemctl enable httpd
-  systemctl enable mysqld
-  systemctl enable php-fpm
-  systemctl enable zoneminder
+  sudo systemctl start httpd mysqld zoneminder
+  sudo systemctl enable zoneminder httpd mysqld 
+  # systemctl start mysqld
+  # systemctl start php-fpm
+  # systemctl start zoneminder
+  # systemctl enable httpd
+  # systemctl enable mysqld
+  # systemctl enable php-fpm
+  # systemctl enable zoneminder
   ```
