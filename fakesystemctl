@@ -1,0 +1,24 @@
+#!/bin/bash
+if [ "$1" == "enable" ]; then
+	if [ "$2" == "--now" ]; then
+		service "$3" start
+	else
+		service "$2" start
+	fi
+fi
+if [ "$1" == "start" ]; then
+	service "$2" start
+fi
+if [ "$1" == "stop" ]; then
+	service "$2" stop
+fi
+if [ "$1" == "disable" ]; then
+	if [ "$2" == "--now" ]; then
+		service "$3" stop
+	else
+		service "$2" stop
+	fi
+fi
+if [ "$1" == "status" ]; then
+	service "$2" status
+fi

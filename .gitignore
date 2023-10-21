@@ -9,3 +9,4 @@ zm_config_docker
 temp/*
 temp/Dockerfile
 temp/Dockerfile
+NewInstall.sh.bak

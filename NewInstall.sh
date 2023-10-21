@@ -157,48 +157,7 @@ chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 systemctl reload apache2
 }
 termux_install() {
-apt update
-apt install gpgv
-apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
-/etc/init.d/mariadb start
-cat << EOF | mysql
-BEGIN;
-CREATE DATABASE zm;
-CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
-GRANT ALL ON zm.* TO zmuser@localhost;
-FLUSH PRIVILEGES;
-EOF
-echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
-apt update && apt -t bullseye-backports install zoneminder -y
-mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
-chgrp -c www-data /etc/zm/zm.conf
-a2enconf zoneminder
-adduser www-data video
-a2enconf zoneminder
-a2enmod rewrite
-a2enmod headers
-a2enmod expires
-echo "Fixing API.."
-chown -R www-data:www-data /usr/share/zoneminder
-cat << END >> /etc/apache2/conf-available/zoneminder.conf
-<Directory /usr/share/zoneminder/www/api>
-    AllowOverride All
-</Directory>
-END
-chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
-sed -i 's/80/8080/g' /etc/apache2/ports.conf
-/etc/init.d/mariadb restart
-/etc/init.d/apache2 start
-/etc/init.d/zoneminder start
-echo -n "Would you like to make Zoneminder start automatically on startup? (just adds the above command to .profile) [y/n]: " ; read answer
-if [ "$answer" == y ]; then
-    echo "/etc/init.d/apache2 start" >> ~/.profile
-    echo "/etc/init.d/mariadb start" >> ~/.profile
-    echo "/etc/init.d/zoneminder start" >> ~/.profile
-fi
-cd /
-wget https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/initzm.sh
-echo "To start it you can run this command at the / dir : bash initzm.sh"
+curl https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/installzm.sh | bash
 }
 Alpine_Install() {
 cat > /etc/apk/repositories << EOF
@@ -206,13 +165,12 @@ http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,
 http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/community
 EOF
 apk update
-apk add apache2 php81-apache2 php8-pdo php8-pdo_mysql mariadb mysql-client  php81-fpm php81-pdo php81-pdo_mysql
-apk add zoneminder
+apk add apache2 php82-apache2 mariadb mysql-client  php82-fpm php82-pdo php82-pdo_mysql  zoneminder 
 # apk add php8-pdo php8-pdo_mysql mariadb mysql-client
 # apk add zoneminder
 service mariadb setup
 service mariadb start
-cat << EOF | mysql
+cat << EOF | mariadb
 BEGIN;
 CREATE DATABASE zm;
 CREATE USER zmuser@localhost IDENTIFIED BY 'zmpass';
@@ -360,7 +318,7 @@ a2enmod expires
 systemctl restart apache2
 systemctl enable zoneminder
 systemctl enable apache2
-systemctl enable mysql
+systemctl enable mariadb
 echo "Fixing API.."
 chown -R www-data:www-data /usr/share/zoneminder
 cat << END >> /etc/apache2/conf-available/zoneminder.conf
