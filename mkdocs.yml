@@ -27,5 +27,5 @@ theme:
     highlightjs: true
     hljs_languages:
         - bash
-  palette:
-    scheme: slate
+    palette:
+      scheme: slate
