@@ -388,6 +388,9 @@ rc-update add mysql default
 rc-update add zoneminder default
 }
 echo -n "Are you sure you want to install Zoneminder? [y/n]: " ; read yn
+if [ $1 = "Y" ]; then
+yn=y
+fi
 if [ $yn = y ]; then
     case $DISTRO in
         "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
@@ -402,10 +405,5 @@ fi
 if [ $yn != y ]; then
     printf "${RED}Aborted\n"
     exit 0
-fi
-echo -n "Would you like to install ZM Event Server? This only works on Debian.. [y/n]: " ; read yn
-if [ $yn = y ]; then
-    echo "===> Installing..."
-    install_evserver
 fi
 echo "You can now connect to Zoneminder at $(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}' | sed 's/.\{3\}$//')/zm"

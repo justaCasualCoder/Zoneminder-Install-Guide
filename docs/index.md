@@ -2,16 +2,16 @@
 
 This repository contains a script to install Zoneminder and a [LAMP](https://en.wikipedia.org/wiki/LAMP_(software_bundle)) Stack on the following linux distributions - 
 
-- Alpine Linux
-- Arch Linux
-- Ubuntu Linux
-- Android ( [Termux](https://termux.dev/) Debian Proot - [My Install Scripts](https://github.com/justaCasualCoder/Zoneminder-Termux) )
-- Debian Linux
-- Fedora Linux
-- OpenSuSE TumbleWeed
+- [x] Alpine Linux
+- [x] Arch Linux
+- [x] Ubuntu Linux
+- [x] Android ( [Termux](https://termux.dev/) Debian Proot - [My Install Scripts](https://github.com/justaCasualCoder/Zoneminder-Termux) )
+- [x] Debian Linux
+- [x] Fedora Linux (Need to test again)
+- [x] OpenSuSE TumbleWeed
 - Most other systems using Docker
 
-Currently the most stable distro to install on is : **Debian**
+Currently the most stable distro to install on is : **Debian 12**
 
 If you would like a support for a Linux distro , create a issue and i will try to add support!
 

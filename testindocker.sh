@@ -48,12 +48,14 @@ alpine=true
 fi
 }
 Debian() {
-sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i debian << EOF
-apt update && apt install curl -y
+sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -p 80:80 -i debian << EOF
+apt update && apt install curl lsb-release -y
 cp fakesystemctl /bin/systemctl
 chmod +x /bin/systemctl
-# echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh
+echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh Y
 curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null
+# echo "Sleeping for 5min..."
+# sleep 300
 if [ $? != 0 ]; then
 exit 1
 else
@@ -68,5 +70,5 @@ echo "SUCCESS!"
 debian=true
 fi
 }
-Debian
+$1
 

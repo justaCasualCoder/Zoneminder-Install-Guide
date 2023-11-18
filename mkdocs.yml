@@ -10,11 +10,14 @@ nav:
     - 'Fedora': 'user-guide/Fedora.md'
     - 'OpenSUSE': 'user-guide/OpenSUSE.md'
     - 'Ubuntu': 'user-guide/Ubuntu.md'
+  - 'Testing Distros in Docker': 'user-guide/Test In Docker.md'
   - About:
     - 'License': 'LICENSE.txt'
     - 'About': 'about.md'
 repo_url: https://github.com/justaCasualCoder/Zoneminder-InstallerScript
 markdown_extensions:
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
