@@ -2,12 +2,12 @@
 # This script is used to test differant linux distros with my install script
 Ubuntu() {
 sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i ubuntu << EOF
-apt update && apt install lsb-release -y
-cp fakesystemctl /bin/systemctl
+apt update && apt install lsb-release python3 curl wget -y
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
-echo "" >> /bin/apt-add-repository
-echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh
-curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null
+echo "" >> /bin/apt-add-repository # Docker has Universe repo by default
+echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh # Auto config TZdata, install packages with no comfirmation
+curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null # Try to make request
 if [ $? != 0 ]; then
 exit 1
 else
@@ -15,23 +15,20 @@ exit 0
 fi
 EOF
 if [ $? != 0 ]; then
-echo "FAILED!"
+echo "Ubuntu Failed!"
 ubuntu=false
 else
-echo "SUCCESS!"
+echo "Ubuntu is Working!"
 ubuntu=true
 fi
 }
 Alpine() {
 sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i alpine << EOF
-cp fakesystemctl /bin/systemctl
-chmod +x /bin/systemctl
-apk add bash openrc
+apk update && apk add wget curl bash openrc python3
 mkdir -p /run/openrc/exclusive
 touch /run/openrc/softlevel
 openrc
 echo y | TZ=Etc/UTC bash NewInstall.sh
-apk add curl
 curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null
 if [ $? != 0 ]; then
 exit 1
@@ -69,6 +66,21 @@ else
 echo "SUCCESS!"
 debian=true
 fi
+}
+Fedora() {
+sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i fedora << EOF
+echo "assumeyes=1" >> /etc/dnf/dnf.conf
+dnf update && dnf install lsb-release python3 curl wget e2fsprogs -y
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
+chmod +x /bin/systemctl
+echo y |  TZ=Etc/UTC bash NewInstall.sh docker # Auto config TZdata, install packages with no comfirmation , and pass docker flag to overwrite systemctl
+curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null # Try to make request
+if [ $? != 0 ]; then
+exit 1
+else
+exit 0
+fi
+EOF
 }
 $1
 

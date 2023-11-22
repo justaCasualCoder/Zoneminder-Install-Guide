@@ -2,21 +2,21 @@
 RED='\033[0;31m'
 # Current working systems - OpenSuSE , Ubuntu , Fedora , Arch Linux , Debian , Alpine Linux
 [[ $(ps -ef|grep -c com.termux ) -gt 1 ]] && echo "Wow! Your on Termux!" && DISTRO="Termux"
-install_evserver() {
-apt install git -y
-git clone https://github.com/zoneminder/zmeventnotification.git
-cd zmeventnotification || exit 1
-sudo perl -MCPAN -e "install Crypt::MySQL"
-sudo perl -MCPAN -e "install Config::IniFiles"
-sudo perl -MCPAN -e "install Crypt::Eksblowfish::Bcrypt"
-apt-get install libjson-perl -y
-apt-get install liblwp-protocol-https-perl
-mkdir -R /etc/zm/apache2/ssl/
-echo "===> Generating SSL Keys.."
-openssl req -x509 -nodes -days 4096 -newkey rsa:2048 -keyout /etc/zm/apache2/ssl/zoneminder.key -out /etc/zm/apache2/ssl/zoneminder.crt
-./install.sh
-echo "Install Complete! - You still have to edit /etc/zm/secrets.ini to contain your IP address and admin password etc"
-}
+# install_evserver() {
+# apt install git -y
+# git clone https://github.com/zoneminder/zmeventnotification.git
+# cd zmeventnotification || exit 1
+# sudo perl -MCPAN -e "install Crypt::MySQL"
+# sudo perl -MCPAN -e "install Config::IniFiles"
+# sudo perl -MCPAN -e "install Crypt::Eksblowfish::Bcrypt"
+# apt-get install libjson-perl -y
+# apt-get install liblwp-protocol-https-perl
+# mkdir -R /etc/zm/apache2/ssl/
+# echo "===> Generating SSL Keys.."
+# openssl req -x509 -nodes -days 4096 -newkey rsa:2048 -keyout /etc/zm/apache2/ssl/zoneminder.key -out /etc/zm/apache2/ssl/zoneminder.crt
+# ./install.sh
+# echo "Install Complete! - You still have to edit /etc/zm/secrets.ini to contain your IP address and admin password etc"
+# }
 # Check if the system uses Debian package manager
 if command -v apt-get > /dev/null 2>&1; then
     DISTRO=$(lsb_release -si)
@@ -224,9 +224,7 @@ pacman -Sy
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
     PASS=$(date | md5sum | cut -c1-8)
-    # read -p "Remember! Temp Pass is $PASS"
     echo temp:${PASS} | chpasswd
-#    echo "temp ALL=(ALL:ALL) ALL" >> /etc/sudoers
     echo "temp ALL=(ALL:ALL) NOPASSWD: /bin/yay, /bin/pacman" >> /etc/sudoers
     mkdir /home/temp/
     chown -R temp:users /home/temp
@@ -296,7 +294,7 @@ Ubuntu_Install() {
 apt update
 apt install gpgv
 apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
-systemctl start mariadb
+service mariadb start
 cat << EOF | mysql
 BEGIN;
 CREATE DATABASE zm;
@@ -353,6 +351,11 @@ firewall-cmd --reload
 Fedora_Install() {
 dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
 dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd zoneminder-httpd mod_ssl -y
+if [ "$1" == "docker" ]; then
+echo "Overwriting SystemD..."
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
+chmod +x /bin/systemctl
+fi
 ln -sf /etc/zm/www/zoneminder.httpd.conf /etc/httpd/conf.d/
 systemctl start httpd
 systemctl start mariadb
@@ -394,12 +397,12 @@ fi
 if [ $yn = y ]; then
     case $DISTRO in
         "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
-        "Fedora Linux"|"Fedora") Fedora_Install ;; 
-        "Ubuntu Linux"|"Ubuntu") Ubuntu_Install ;;
-        "Termux"|"Android") termux_install ;; 
-        "Arch"|"Arch Linux") Arch_Install ;;
-        "Alpine Linux"|"Alpine") Alpine_Install ;;
-        "OpenSuSE"|"OpenSuSe") suse_Install ;;
+        "Fedora Linux"|"Fedora") Fedora_Install $@ ;; 
+        "Ubuntu Linux"|"Ubuntu") Ubuntu_Install $@ ;;
+        "Termux"|"Android") termux_install $@ ;; 
+        "Arch"|"Arch Linux") Arch_Install $@ ;;
+        "Alpine Linux"|"Alpine") Alpine_Install $@ ;;
+        "OpenSuSE"|"OpenSuSe") suse_Install $@ ;;
 esac
 fi
 if [ $yn != y ]; then
