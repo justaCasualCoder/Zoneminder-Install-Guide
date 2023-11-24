@@ -21,6 +21,9 @@ RED='\033[0;31m'
 if command -v apt-get > /dev/null 2>&1; then
     DISTRO=$(lsb_release -si)
     echo "Detected Debian-based distribution: $DISTRO"
+elif command -v emerge > /dev/null 2>&1; then
+    echo "Detected Gentoo"
+    DISTRO="Gentoo"
 # Check if the system uses Red Hat package manager
 elif command -v yum > /dev/null 2>&1; then
     DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
@@ -52,6 +55,7 @@ Debian12_Install() {
 apt update 
 apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
 apt install zoneminder -y
+service mariadb start
 mysql -uroot  < /usr/share/zoneminder/db/zm_create.sql
 mysql -uroot  -e "grant all on zm.* to 'zmuser'@localhost identified by 'zmpass';"
 mysqladmin -uroot reload
@@ -122,7 +126,8 @@ a2enmod rewrite
 a2enmod headers
 a2enmod expires
 a2enmod cgi
-service apache2 reload
+systemctl start apache2 zoneminder mariadb
+systemctl enable apache2 zoneminder mariadb
 }
 Debian11_Install() {
 apt update
@@ -220,6 +225,9 @@ EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 }
 Arch_Install() {
+pacman() {
+pacman --noconfirm "$@"
+}
 pacman -Sy
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
@@ -350,7 +358,7 @@ firewall-cmd --reload
 }
 Fedora_Install() {
 dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd zoneminder-httpd mod_ssl -y
+dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd zoneminder-httpd mod_ssl openssl -y
 if [ "$1" == "docker" ]; then
 echo "Overwriting SystemD..."
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
@@ -370,8 +378,9 @@ setenforce 0
 # Temporary fix to make gui work - with proparly fix in future
 mkdir /usr/share/zoneminder/www/skins/classic/css/fonts 
 ln /usr/share/zoneminder/www/fonts/* /usr/share/zoneminder/www/skins/classic/css/fonts/
-systemctl start httpd zoneminder mariadb
-systemctl enable httpd zoneminder mariadb
+openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/localhost.key -x509 -days 365 -out /etc/pki/tls/certs/localhost.crt
+systemctl start httpd zoneminder mariadb php-fpm
+systemctl enable httpd zoneminder mariadb php-fpm
 firewall-cmd --permanent --add-service=http
 firewall-cmd --permanent --add-service=https
 firewall-cmd  --add-service=http --add-service=https
@@ -403,6 +412,7 @@ if [ $yn = y ]; then
         "Arch"|"Arch Linux") Arch_Install $@ ;;
         "Alpine Linux"|"Alpine") Alpine_Install $@ ;;
         "OpenSuSE"|"OpenSuSe") suse_Install $@ ;;
+        "Gentoo") echo "Gentoo is not ready yet :(" ;; # Gentoo_Install "$@" ;;
 esac
 fi
 if [ $yn != y ]; then

@@ -45,14 +45,12 @@ alpine=true
 fi
 }
 Debian() {
-sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -p 80:80 -i debian << EOF
-apt update && apt install curl lsb-release -y
-cp fakesystemctl /bin/systemctl
+sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd)  -i debian << EOF
+apt update && apt install curl lsb-release python3 wget -y
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
-echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh Y
+echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh
 curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null
-# echo "Sleeping for 5min..."
-# sleep 300
 if [ $? != 0 ]; then
 exit 1
 else
@@ -74,12 +72,29 @@ dnf update && dnf install lsb-release python3 curl wget e2fsprogs -y
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo y |  TZ=Etc/UTC bash NewInstall.sh docker # Auto config TZdata, install packages with no comfirmation , and pass docker flag to overwrite systemctl
-curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null # Try to make request
+curl -Ssfk --keepalive-time 5 --write-out "%{http_code}" https://localhost/zm/ &> /dev/null # Try to make request
 if [ $? != 0 ]; then
 exit 1
 else
 exit 0
 fi
+EOF
+if [ $? != 0 ]; then
+echo "FAILED!"
+Fedora=false
+else
+echo "SUCCESS!"
+Fedora=true
+fi
+}
+Arch() {
+docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i archlinux << EOF
+pacman-key --init
+pacman -Syu python3 wget curl sudo --nocomfirm # Mask pacman command in future..
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
+chmod +x /bin/systemctl
+echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
+echo y |  TZ=Etc/UTC bash NewInstall.sh
 EOF
 }
 $1
