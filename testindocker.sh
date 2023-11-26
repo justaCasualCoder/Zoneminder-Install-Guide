@@ -97,5 +97,16 @@ echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
 echo y |  TZ=Etc/UTC bash NewInstall.sh
 EOF
 }
+opensuse() {
+docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i opensuse/tumbleweed << EOF
+zypper --gpg-auto-import-keys refresh
+zypper -n refresh
+zypper -n install python3 wget curl sudo
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
+chmod +x /bin/systemctl
+echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
+echo y |  TZ=Etc/UTC bash NewInstall.sh docker
+EOF
+}
 $1
 

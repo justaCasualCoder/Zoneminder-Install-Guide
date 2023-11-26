@@ -339,10 +339,19 @@ zypper addrepo https://download.opensuse.org/repositories/security:zoneminder/op
 zypper --gpg-auto-import-keys refresh
 zypper -n refresh
 zypper -n install apache2 php php-mysql php-gd php-mbstring apache2-mod_php8 mariadb mariadb-client ZoneMinder php8-intl
+if [ "$1" == "docker" ]; then
+echo "Overwriting SystemD..."
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
+chmod +x /bin/systemctl
+echo "Fixing MariaDB..."
+/usr/libexec/mysql/mysql-systemd-helper     install
+echo "Done!"
+fi
 a2enmod rewrite
 a2enmod headers
 a2enmod expires
 a2enmod php8
+systemctl start mariadb 
 cat << EOF | mariadb
 BEGIN;
 CREATE DATABASE zm;

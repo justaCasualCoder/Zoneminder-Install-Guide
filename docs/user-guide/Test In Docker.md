@@ -8,7 +8,7 @@ Distro support for docker test script:
 - [ ] Android ( [Termux](https://termux.dev/) Debian Proot - [My Install Scripts](https://github.com/justaCasualCoder/Zoneminder-Termux) )
 - [x] Debian Linux
 - [x] Fedora Linux
-- [ ] OpenSuSE TumbleWeed
+- [x] OpenSuSE TumbleWeed
 
 
 Example running it (Have docker installed!):
