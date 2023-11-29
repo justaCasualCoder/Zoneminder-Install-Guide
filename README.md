@@ -7,7 +7,7 @@ This repository contains a script to install Zoneminder and a [LAMP](https://en.
 - [x] Ubuntu Linux
 - [x] Android ( [Termux](https://termux.dev/) Debian Proot - [My Install Scripts](https://github.com/justaCasualCoder/Zoneminder-Termux) )
 - [x] Debian Linux
-- [x] Fedora Linux (Need to test again)
+- [x] Fedora Linux
 - [x] OpenSuSE TumbleWeed
 - Most other systems using Docker
 
