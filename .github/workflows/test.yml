@@ -1,0 +1,32 @@
+name: Test Linux Distros
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Run Ubuntu Test
+      run: |
+        bash testindocker.sh Ubuntu
+
+    - name: Run Alpine Test
+      run: |
+        bash testindocker.sh Alpine
+
+    - name: Run Debian Test
+      run: |
+        bash testindocker.sh Debian
+        
+    - name: Run Fedora Test
+      run: |
+        bash testindocker.sh Fedora
+
+    - name: Run OpenSuSE Test
+      run: |
+        bash testindocker.sh opensuse
+
