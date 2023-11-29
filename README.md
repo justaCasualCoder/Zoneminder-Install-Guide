@@ -11,11 +11,6 @@ This repository contains a script to install Zoneminder and a [LAMP](https://en.
 
 Currently the most stable distro to install on is : **Debian**
 
-If you would like support for a differant Linux distro , create a issue and i will try to add support!
+Currently the fastest distro to install on is: **Alpine Linux** at `31.025s`! However that is at Microsoft Azure's 10Gbps
 
-## Docker
-Docker is now working - it is a very early image based on Debian - you can use it by running
-```
-docker run -d ghcr.io/justacasualcoder/zoneminder-installerscript:main
-```
-It will start Apache2 Mariadb and Zoneminder inside the container
+If you would like support for a different Linux distro , create a issue and I will try to add support!
