@@ -170,9 +170,7 @@ http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,
 http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/community
 EOF
 apk update
-apk add apache2 php82-apache2 mariadb mysql-client  php82-fpm php82-pdo php82-pdo_mysql  zoneminder 
-# apk add php8-pdo php8-pdo_mysql mariadb mysql-client
-# apk add zoneminder
+apk add apache2 php82-apache2 mariadb mariadb-client php82-pdo php82-pdo_mysql php82-intl php82-session zoneminder 
 service mariadb setup
 service mariadb start
 cat << EOF | mariadb
@@ -183,7 +181,6 @@ GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
-# apk add php81-fpm php81-pdo php81-pdo_mysql
 sed -i 's/Options None/Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch/' /etc/apache2/httpd.conf
 service mariadb start
 service apache2 start
