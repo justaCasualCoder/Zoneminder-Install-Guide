@@ -1,4 +1,6 @@
 # Zoneminder Install Script
+[![pages-build-deployment](https://github.com/justaCasualCoder/Zoneminder-Install-Guide/actions/workflows/pages/pages-build-deployment/badge.svg?branch=main)](https://github.com/justaCasualCoder/Zoneminder-Install-Guide/actions/workflows/pages/pages-build-deployment) [![Test Linux Distros](https://github.com/justaCasualCoder/Zoneminder-Install-Guide/actions/workflows/test.yml/badge.svg)](https://github.com/justaCasualCoder/Zoneminder-Install-Guide/actions/workflows/test.yml)
+
 This repository contains a script to install Zoneminder and a [LAMP](https://en.wikipedia.org/wiki/LAMP_(software_bundle)) Stack on the following linux distributions - 
 - [x] Alpine Linux
 - [x] Arch Linux
