@@ -1,6 +1,13 @@
 name: Test Linux Distros
 
-on: [push]
+on:
+  push:
+    branches:
+      - main # or a pattern like "*" for including all branches
+    paths:
+      - NewInstall.sh
+    tags-ignore:
+      - "*"
 
 jobs:
   test:
