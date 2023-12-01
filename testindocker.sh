@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is used to test differant linux distros with my install script
+# This script is used to test different linux distros with my install script
 Ubuntu() {
 sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i ubuntu << EOF
 apt update && apt install lsb-release python3 curl wget -y
