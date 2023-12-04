@@ -2,6 +2,21 @@
 RED='\033[0;31m'
 # Current working systems - OpenSuSE , Ubuntu , Fedora , Arch Linux , Debian , Alpine Linux
 [[ $(ps -ef|grep -c com.termux ) -gt 1 ]] && echo "Wow! Your on Termux!" && DISTRO="Termux"
+# install_evserver() {
+# apt install git -y
+# git clone https://github.com/zoneminder/zmeventnotification.git
+# cd zmeventnotification || exit 1
+# sudo perl -MCPAN -e "install Crypt::MySQL"
+# sudo perl -MCPAN -e "install Config::IniFiles"
+# sudo perl -MCPAN -e "install Crypt::Eksblowfish::Bcrypt"
+# apt-get install libjson-perl -y
+# apt-get install liblwp-protocol-https-perl
+# mkdir -R /etc/zm/apache2/ssl/
+# echo "===> Generating SSL Keys.."
+# openssl req -x509 -nodes -days 4096 -newkey rsa:2048 -keyout /etc/zm/apache2/ssl/zoneminder.key -out /etc/zm/apache2/ssl/zoneminder.crt
+# ./install.sh
+# echo "Install Complete! - You still have to edit /etc/zm/secrets.ini to contain your IP address and admin password etc"
+# }
 # Check if the system uses Debian package manager
 if command -v apt-get > /dev/null 2>&1; then
     DISTRO=$(lsb_release -si)
@@ -35,20 +50,6 @@ else
     DISTRO=$(cat /etc/issue | awk '{print $1}')
     echo "Unable to detect package manager, falling back to /etc/issue: $DISTRO"
 fi
-confirm() {
-printf "$1 (y/n)? "
-old_stty_cfg=$(stty -g)
-stty raw -echo
-answer=$( while ! head -c 1 | grep -i '[ny]' ;do true ;done )
-stty $old_stty_cfg
-if [ "$answer" != "${answer#[Yy]}" ];then
-    echo "Continue"
-    $2
-else
-    echo "Exit"
-    exit
-fi
-}
 Debian12_Install() {
 # From https://wiki.zoneminder.com/Debian_12_Bookworm_with_Zoneminder_1.36.33
 apt update 
@@ -64,7 +65,7 @@ chown -R www-data:www-data /var/cache/zoneminder/
 chmod 755 /var/cache/zoneminder/
 cp /etc/apache2/conf-available/zoneminder.conf /etc/apache2/conf-available/zoneminder.conf.bak 
 rm /etc/apache2/conf-available/zoneminder.conf
-cat << EOF >> /etc/apache2/conf-available/zoneminder.conf #TODO: Check if this still needs to be done. ( I Think Zonemidner fixed it :)
+cat << EOF >> /etc/apache2/conf-available/zoneminder.conf
 # Remember to enable cgi mod (i.e. "a2enmod cgi").
 ScriptAlias /zm/cgi-bin "/usr/lib/zoneminder/cgi-bin"
 <Directory "/usr/lib/zoneminder/cgi-bin">
@@ -150,7 +151,7 @@ a2enmod rewrite
 a2enmod headers
 a2enmod expires
 a2enmod cgi
-echo "Fixing API.." #TODO: Check if this still needs to be done.
+echo "Fixing API.."
 chown -R www-data:www-data /usr/share/zoneminder
 cat << END >> /etc/apache2/conf-available/zoneminder.conf
 <Directory /usr/share/zoneminder/www/api>
@@ -221,9 +222,9 @@ EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 }
 Arch_Install() {
-if [ $nointeractive = 1 ]; then
-alias pacman="pacman --noconfirm"
-fi
+pacman() {
+pacman --noconfirm "$@"
+}
 pacman -Sy
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
@@ -237,18 +238,18 @@ pacman -Qe | grep 'yay' &> /dev/null
 if [ $? == 0 ]; then
    echo "Yay Is already installed!"
 else
-pacman -S fakeroot make git base-devel 
+pacman -S fakeroot make git base-devel --noconfirm
 cd /opt || exit 1
 mkdir yay
 chown temp:users yay
 git clone https://aur.archlinux.org/yay-bin.git yay
 chown -R temp:users ./yay
 cd yay ||  { echo "Failed to clone"; echo "exit 3"; }
-sudo -u  temp -- /bin/makepkg -si
+sudo -u  temp -- /bin/makepkg -si --noconfirm
 fi
-pacman -S  apache mariadb sudo php php-apache php-fpm
+pacman -S --noconfirm apache mariadb sudo php php-apache php-fpm
 echo "Fixing PHP intl:"
-pacman -S icu
+pacman -S --noconfirm icu
 sudo -E -u temp -- yay -S icu72 --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
 systemctl restart httpd
 # Setup MariaDB and php modules
@@ -262,10 +263,11 @@ sed -i '$ a Include conf\/extra\/php_module.conf' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
 # echo y | yay --noprovides --answerdiff None --answerclean None --mflags "--noconfirm" zoneminder
 export PATH=$PATH:/usr/bin/core_perl/
+# sudo -E -u temp --  yay -S zoneminder
 # Install Zoneminder
 sudo -E -u temp --  yay -S zoneminder --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
 sed -i "7,9 {s/^/#/}" /etc/httpd/conf/extra/zoneminder.conf
-# enable Apache2 modules
+# enable httpd modules
 echo "Include conf/extra/zoneminder.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_module modules/mod_proxy.so\)|\1|' /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so\)|\1|' /etc/httpd/conf/httpd.conf
@@ -284,8 +286,14 @@ EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 sed -i '$ d' /etc/sudoers
 userdel temp
-systemctl start httpd mariadb php-fpm zoneminder
-systemctl enable httpd mariadb php-fpm zoneminder
+systemctl start httpd
+systemctl start mysqld
+systemctl start php-fpm
+systemctl start zoneminder
+systemctl enable httpd
+systemctl enable mysqld
+systemctl enable php-fpm
+systemctl enable zoneminder
 }
 Ubuntu_Install() {
 apt update
@@ -329,7 +337,7 @@ zypper --gpg-auto-import-keys refresh
 zypper -n refresh
 zypper -n install apache2 php php-mysql php-gd php-mbstring apache2-mod_php8 mariadb mariadb-client ZoneMinder php8-intl
 if [ "$1" == "docker" ]; then
-echo "Overwriting SystemD...(To work in docker)"
+echo "Overwriting SystemD..."
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "Fixing MariaDB..."
@@ -397,16 +405,24 @@ emerge zoneminder
 rc-update add mysql default
 rc-update add zoneminder default
 }
-confirm "Are you sure you want to install Zoneminder?"
-confirm "Do you want a no-interactive install?" nointeractive=1
-case $DISTRO in
-    "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
-    "Fedora Linux"|"Fedora") Fedora_Install $@ ;; 
-     "Ubuntu Linux"|"Ubuntu") Ubuntu_Install $@ ;;
-    "Termux"|"Android") termux_install $@ ;; 
-     "Arch"|"Arch Linux") Arch_Install $@ ;;
-     "Alpine Linux"|"Alpine") Alpine_Install $@ ;;
-     "OpenSuSE"|"OpenSuSe") suse_Install $@ ;;
-     "Gentoo") echo "Gentoo is not ready yet :(" ;; # Gentoo_Install "$@" ;;
+echo -n "Are you sure you want to install Zoneminder? [y/n]: " ; read yn
+if [ $1 = "Y" ]; then
+yn=y
+fi
+if [ $yn = y ]; then
+    case $DISTRO in
+        "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
+        "Fedora Linux"|"Fedora") Fedora_Install $@ ;; 
+        "Ubuntu Linux"|"Ubuntu") Ubuntu_Install $@ ;;
+        "Termux"|"Android") termux_install $@ ;; 
+        "Arch"|"Arch Linux") Arch_Install $@ ;;
+        "Alpine Linux"|"Alpine") Alpine_Install $@ ;;
+        "OpenSuSE"|"OpenSuSe") suse_Install $@ ;;
+        "Gentoo") echo "Gentoo is not ready yet :(" ;; # Gentoo_Install "$@" ;;
 esac
+fi
+if [ $yn != y ]; then
+    printf "${RED}Aborted\n"
+    exit 0
+fi
 echo "You can now connect to Zoneminder at $(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}' | sed 's/.\{3\}$//')/zm"
