@@ -3,7 +3,7 @@ name: Test Linux Distros
 on:
   push:
     branches:
-      - main # or a pattern like "*" for including all branches
+      - stable # or a pattern like "*" for including all branches
     paths:
       - NewInstall.sh
     tags-ignore:
