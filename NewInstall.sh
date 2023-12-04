@@ -80,11 +80,20 @@ exit
     shift
   done
 }
+# Define Alias's for nointeractive;
+if [ $nointeractive = 1 ]; then
+alias pacman="pacman --noconfirm"
+alias apt="apt -y"
+alias zypper="zypper -n"
+alias dnf="dnf -y"
+else
+alias apk="apk -i"
+fi
 Debian12_Install() {
 # From https://wiki.zoneminder.com/Debian_12_Bookworm_with_Zoneminder_1.36.33
 apt update 
-apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
-apt install zoneminder -y
+apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2
+apt install zoneminder
 service mariadb start
 mysql -uroot  < /usr/share/zoneminder/db/zm_create.sql
 mysql -uroot  -e "grant all on zm.* to 'zmuser'@localhost identified by 'zmpass';"
@@ -161,7 +170,7 @@ systemctl enable apache2 zoneminder mariadb
 }
 Debian11_Install() {
 apt update
-apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 gpgv -y
+apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 gpgv
 systemctl start mariadb
 cat << EOF | mysql
 BEGIN;
@@ -171,7 +180,7 @@ GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 EOF
 echo 'deb http://deb.debian.org/debian bullseye-backports main contrib' >> /etc/apt/sources.list
-apt update && apt -t bullseye-backports install zoneminder -y
+apt update && apt -t bullseye-backports install zoneminder
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 chgrp -c www-data /etc/zm/zm.conf
 a2enconf zoneminder
@@ -253,9 +262,6 @@ EOF
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 }
 Arch_Install() {
-if [ $nointeractive = 1 ]; then
-alias pacman="pacman --noconfirm"
-fi
 pacman -Sy
 if ! id -u temp >/dev/null 2>&1; then
     useradd -g users temp
@@ -281,7 +287,12 @@ fi
 pacman -S  apache mariadb sudo php php-apache php-fpm
 echo "Fixing PHP intl:"
 pacman -S icu
-sudo -E -u temp -- yay -S icu72 --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
+if [ $nointeractive = 1 ]; then
+cmd='sudo -E -u temp -- yay -S icu72 --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"'
+else
+cmd='sudo -E -u temp -- yay -S icu72'
+fi
+$cmd
 systemctl restart httpd
 # Setup MariaDB and php modules
 mysql_install_db --user=mysql --basedir=/usr/ --ldata=/var/lib/mysql/
@@ -292,12 +303,16 @@ sed -i 's/^#LoadModule mpm_prefork_module modules\/mod_mpm_prefork\.so/LoadModul
 sed -i '/^#LoadModule/s/$/\nLoadModule php_module modules\/libphp.so\nAddHandler php-script .php/' /etc/httpd/conf/httpd.conf
 sed -i '$ a Include conf\/extra\/php_module.conf' /etc/httpd/conf/httpd.conf
 systemctl restart httpd
-# echo y | yay --noprovides --answerdiff None --answerclean None --mflags "--noconfirm" zoneminder
 export PATH=$PATH:/usr/bin/core_perl/
 # Install Zoneminder
-sudo -E -u temp --  yay -S zoneminder --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"
-sed -i "7,9 {s/^/#/}" /etc/httpd/conf/extra/zoneminder.conf
+if [ $nointeractive = 1 ]; then
+cmd='sudo -E -u temp --  yay -S zoneminder --noprovides --answerdiff None --answerclean None --mflags "--noconfirm"'
+else
+cmd='sudo -E -u temp -- yay -S zoneminder'
+fi
+$cmd
 # enable Apache2 modules
+sed -i "7,9 {s/^/#/}" /etc/httpd/conf/extra/zoneminder.conf
 echo "Include conf/extra/zoneminder.conf" >> /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_module modules/mod_proxy.so\)|\1|' /etc/httpd/conf/httpd.conf
 sed -i 's|^#\(LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so\)|\1|' /etc/httpd/conf/httpd.conf
@@ -322,7 +337,7 @@ systemctl enable httpd mariadb php-fpm zoneminder
 Ubuntu_Install() {
 apt update
 apt install gpgv
-apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2 -y
+apt install apache2 mariadb-server php libapache2-mod-php php-mysql lsb-release gnupg2
 service mariadb start
 cat << EOF | mysql
 BEGIN;
@@ -332,7 +347,7 @@ GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 EOF
 add-apt-repository universe
-apt update && apt install zoneminder -y
+apt update && apt install zoneminder
 mariadb -u zmuser -pzmpass < /usr/share/zoneminder/db/zm_create.sql
 # Run this after updates + reinstall php + restart mysql,apache2,and zoneminder
 chgrp -c www-data /etc/zm/zm.conf
@@ -358,14 +373,14 @@ chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 suse_Install() {
 zypper addrepo https://download.opensuse.org/repositories/security:zoneminder/openSUSE_Tumbleweed/security:zoneminder.repo
 zypper --gpg-auto-import-keys refresh
-zypper -n refresh
-zypper -n install apache2 php php-mysql php-gd php-mbstring apache2-mod_php8 mariadb mariadb-client ZoneMinder php8-intl
-if [ "$1" == "docker" ]; then
+zypper refresh
+zypper install apache2 php php-mysql php-gd php-mbstring apache2-mod_php8 mariadb mariadb-client ZoneMinder php8-intl
+if [ "$docker" == "1" ]; then
 echo "Overwriting SystemD...(To work in docker)"
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "Fixing MariaDB..."
-/usr/libexec/mysql/mysql-systemd-helper     install
+/usr/libexec/mysql/mysql-systemd-helper  install
 echo "Done!"
 fi
 a2enmod rewrite
@@ -387,9 +402,9 @@ firewall-cmd --permanent --add-port=443/tcp
 firewall-cmd --reload
 }
 Fedora_Install() {
-dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd zoneminder-httpd mod_ssl openssl -y
-if [ "$1" == "docker" ]; then
+dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+dnf install nano sed httpd mariadb-server php  php-common php-mysqlnd zoneminder-httpd mod_ssl openssl
+if [ "$docker" == "1" ]; then
 echo "Overwriting SystemD..."
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl

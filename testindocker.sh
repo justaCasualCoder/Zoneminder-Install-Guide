@@ -71,7 +71,7 @@ echo "assumeyes=1" >> /etc/dnf/dnf.conf
 dnf update && dnf install lsb-release python3 curl wget e2fsprogs -y
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
-echo y |  TZ=Etc/UTC bash NewInstall.sh docker # Auto config TZdata, install packages with no comfirmation , and pass docker flag to overwrite systemctl
+echo y |  TZ=Etc/UTC bash NewInstall.sh -t # Auto config TZdata, install packages with no comfirmation , and pass docker flag to overwrite systemctl
 curl -Ssfk --keepalive-time 5 --write-out "%{http_code}" https://localhost/zm/ &> /dev/null # Try to make request
 if [ $? != 0 ]; then
 exit 1
@@ -105,7 +105,7 @@ zypper -n install python3 wget curl sudo
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
-echo y |  TZ=Etc/UTC bash NewInstall.sh docker
+echo y |  TZ=Etc/UTC bash NewInstall.sh -t
 EOF
 }
 $1
