@@ -1,5 +1,6 @@
 #!/bin/bash
 RED='\033[0;31m'
+detect_os() {
 # Current working systems - OpenSuSE , Ubuntu , Fedora , Arch Linux , Debian , Alpine Linux
 [[ $(ps -ef|grep -c com.termux ) -gt 1 ]] && echo "Wow! Your on Termux!" && DISTRO="Termux"
 # Check if the system uses Debian package manager
@@ -35,6 +36,7 @@ else
     DISTRO=$(cat /etc/issue | awk '{print $1}')
     echo "Unable to detect package manager, falling back to /etc/issue: $DISTRO"
 fi
+}
 confirm() {
 printf "$1 (y/n)? "
 old_stty_cfg=$(stty -g)
@@ -48,6 +50,35 @@ else
     echo "Exit"
     exit
 fi
+}
+parse_args() {
+#Arg Parse from https://betterdev.blog/minimal-safe-bash-script-template/
+usage() {
+cat <<EOF
+Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-d] [-n]
+
+Bash Script for Installing Zoneminder
+
+Available options:
+
+-h, --help          Print this help and exit
+-d, --debug         Print script debug info
+-n, --nointeractive Run the script with no confirmation
+-t, --dockertest    Overwrite SystemD in docker (DO NOT USE!)
+EOF
+exit
+}
+  while :; do
+    case "${1-}" in
+    -h | --help) usage ;;
+    -d | --debug) set -x ;;
+    -n | --nointeractive) nointeractive=1 ;;
+    -t | --dockertest) docker=1 ;;
+    -?*) echo "Unknown option: $1" && exit 0 ;;
+    *) break ;;
+    esac
+    shift
+  done
 }
 Debian12_Install() {
 # From https://wiki.zoneminder.com/Debian_12_Bookworm_with_Zoneminder_1.36.33
@@ -161,7 +192,8 @@ chown www-data:www-data /etc/apache2/conf-available/zoneminder.conf
 systemctl reload apache2
 }
 termux_install() {
-curl https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/installzm.sh | bash
+wget https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Termux/main/installzm.sh
+bash installzm.sh
 }
 Alpine_Install() {
 cat > /etc/apk/repositories << EOF
@@ -397,16 +429,18 @@ emerge zoneminder
 rc-update add mysql default
 rc-update add zoneminder default
 }
+parse_args
 confirm "Are you sure you want to install Zoneminder?"
 confirm "Do you want a no-interactive install?" nointeractive=1
+detect_os
 case $DISTRO in
     "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
-    "Fedora Linux"|"Fedora") Fedora_Install $@ ;; 
-     "Ubuntu Linux"|"Ubuntu") Ubuntu_Install $@ ;;
-    "Termux"|"Android") termux_install $@ ;; 
-     "Arch"|"Arch Linux") Arch_Install $@ ;;
-     "Alpine Linux"|"Alpine") Alpine_Install $@ ;;
-     "OpenSuSE"|"OpenSuSe") suse_Install $@ ;;
-     "Gentoo") echo "Gentoo is not ready yet :(" ;; # Gentoo_Install "$@" ;;
+    "Fedora Linux"|"Fedora") Fedora_Install ;;
+     "Ubuntu Linux"|"Ubuntu") Ubuntu_Install ;;
+    "Termux"|"Android") termux_install ;; 
+     "Arch"|"Arch Linux") Arch_Install ;;
+     "Alpine Linux"|"Alpine") Alpine_Install ;;
+     "OpenSuSE"|"OpenSuSe") suse_Install ;;
+     "Gentoo") echo "Gentoo is not ready yet :(" ;; # Gentoo_Install ;;
 esac
 echo "You can now connect to Zoneminder at $(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}' | sed 's/.\{3\}$//')/zm"
