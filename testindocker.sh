@@ -90,7 +90,7 @@ fi
 Arch() {
 docker run --rm -v $(pwd):$(pwd) -w $(pwd) -i archlinux << EOF
 pacman-key --init
-pacman -Syu python3 wget curl sudo --nocomfirm # Mask pacman command in future..
+pacman -Syu --noconfirm python3 wget curl sudo
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers

@@ -1,5 +1,34 @@
 #!/bin/bash
+#Arg Parse from https://betterdev.blog/minimal-safe-bash-script-template/
 RED='\033[0;31m'
+docker=""
+nointeractive=0
+usage() {
+cat <<EOF
+Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-d] [-n]
+
+Bash Script for Installing Zoneminder
+
+Available options:
+
+-h, --help          Print this help and exit
+-d, --debug         Print script debug info
+-n, --nointeractive Run the script with no confirmation
+-t, --dockertest    Overwrite SystemD in docker (DO NOT USE!)
+EOF
+exit
+}
+  while :; do
+    case "${1-}" in
+    -h | --help) usage ;;
+    -d | --debug) set -x ;;
+    -n | --nointeractive) nointeractive=1 ;;
+    -t | --dockertest) docker=1 && echo $docker ;;
+    -?*) echo "Unknown option: $1" && exit 0 ;;
+    *) break ;;
+    esac
+    shift
+  done
 detect_os() {
 # Current working systems - OpenSuSE , Ubuntu , Fedora , Arch Linux , Debian , Alpine Linux
 [[ $(ps -ef|grep -c com.termux ) -gt 1 ]] && echo "Wow! Your on Termux!" && DISTRO="Termux"
@@ -50,35 +79,6 @@ else
     echo "Exit"
     exit
 fi
-}
-parse_args() {
-#Arg Parse from https://betterdev.blog/minimal-safe-bash-script-template/
-usage() {
-cat <<EOF
-Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-d] [-n]
-
-Bash Script for Installing Zoneminder
-
-Available options:
-
--h, --help          Print this help and exit
--d, --debug         Print script debug info
--n, --nointeractive Run the script with no confirmation
--t, --dockertest    Overwrite SystemD in docker (DO NOT USE!)
-EOF
-exit
-}
-  while :; do
-    case "${1-}" in
-    -h | --help) usage ;;
-    -d | --debug) set -x ;;
-    -n | --nointeractive) nointeractive=1 ;;
-    -t | --dockertest) docker=1 ;;
-    -?*) echo "Unknown option: $1" && exit 0 ;;
-    *) break ;;
-    esac
-    shift
-  done
 }
 # Define Alias's for nointeractive;
 if [ $nointeractive = 1 ]; then
@@ -420,10 +420,16 @@ GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 EOF
 setenforce 0
-# Temporary fix to make gui work - with proparly fix in future
-mkdir /usr/share/zoneminder/www/skins/classic/css/fonts 
-ln /usr/share/zoneminder/www/fonts/* /usr/share/zoneminder/www/skins/classic/css/fonts/
-openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/localhost.key -x509 -days 365 -out /etc/pki/tls/certs/localhost.crt
+# Temporary fix to make gui work - with proparly fix in future #TODO: Check if it is fixed
+# mkdir /usr/share/zoneminder/www/skins/classic/css/fonts 
+# ln /usr/share/zoneminder/www/fonts/* /usr/share/zoneminder/www/skins/classic/css/fonts/
+if [ $docker = 1 ]; then
+openssl req -x509 -newkey rsa:4096 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt  -sha256 -days 365 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=C
+ompanySectionName/CN=CommonNameOrHostname"
+else
+# Create Cert valid for 10 years
+openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/localhost.key -x509 -days 3650 -out /etc/pki/tls/certs/localhost.crt
+fi
 systemctl start httpd zoneminder mariadb php-fpm
 systemctl enable httpd zoneminder mariadb php-fpm
 firewall-cmd --permanent --add-service=http
@@ -444,9 +450,11 @@ emerge zoneminder
 rc-update add mysql default
 rc-update add zoneminder default
 }
-parse_args
+echo $docker
+if [ "$docker" != 1 ]; then
 confirm "Are you sure you want to install Zoneminder?"
 confirm "Do you want a no-interactive install?" nointeractive=1
+fi
 detect_os
 case $DISTRO in
     "Debian"|"Debian Linux") [[ $(lsb_release -r | tr -d -c 0-9 )  = 12 ]] && Debian12_Install || Debian11_Install ;;
