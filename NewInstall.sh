@@ -420,9 +420,6 @@ GRANT ALL ON zm.* TO zmuser@localhost;
 FLUSH PRIVILEGES;
 EOF
 setenforce 0
-# Temporary fix to make gui work - with proparly fix in future #TODO: Check if it is fixed
-# mkdir /usr/share/zoneminder/www/skins/classic/css/fonts 
-# ln /usr/share/zoneminder/www/fonts/* /usr/share/zoneminder/www/skins/classic/css/fonts/
 if [ $docker = 1 ]; then
 openssl req -x509 -newkey rsa:4096 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt  -sha256 -days 365 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=C
 ompanySectionName/CN=CommonNameOrHostname"
