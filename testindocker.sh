@@ -6,7 +6,7 @@ apt update && apt install lsb-release python3 curl wget -y
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "" >> /bin/apt-add-repository # Docker has Universe repo by default
-echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh # Auto config TZdata, install packages with no comfirmation
+echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh -t -n # Auto config TZdata, install packages with no comfirmation
 curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null # Try to make request
 if [ $? != 0 ]; then
 exit 1
@@ -28,7 +28,7 @@ apk update && apk add wget curl bash openrc python3
 mkdir -p /run/openrc/exclusive
 touch /run/openrc/softlevel
 openrc
-echo y | TZ=Etc/UTC bash NewInstall.sh
+echo y | TZ=Etc/UTC bash NewInstall.sh -t -n
 curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null
 if [ $? != 0 ]; then
 exit 1
@@ -49,7 +49,7 @@ sudo docker run --rm -v $(pwd):$(pwd) -w $(pwd)  -i debian << EOF
 apt update && apt install curl lsb-release python3 wget -y
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
-echo y | DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh
+DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC bash NewInstall.sh -t -n
 curl -Ssf --keepalive-time 5 --write-out "%{http_code}" localhost/zm/ &> /dev/null
 if [ $? != 0 ]; then
 exit 1
@@ -71,7 +71,7 @@ echo "assumeyes=1" >> /etc/dnf/dnf.conf
 dnf update && dnf install lsb-release python3 curl wget e2fsprogs -y
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
-echo y |  TZ=Etc/UTC bash NewInstall.sh -t # Auto config TZdata, install packages with no comfirmation , and pass docker flag to overwrite systemctl
+echo y |  TZ=Etc/UTC bash NewInstall.sh -t -n # Auto config TZdata, install packages with no comfirmation , and pass docker flag to overwrite systemctl
 curl -Ssfk --keepalive-time 5 --write-out "%{http_code}" https://localhost/zm/ &> /dev/null # Try to make request
 if [ $? != 0 ]; then
 exit 1
@@ -94,7 +94,7 @@ pacman -Syu --noconfirm python3 wget curl sudo
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
-echo y |  TZ=Etc/UTC bash NewInstall.sh
+echo y |  TZ=Etc/UTC bash NewInstall.sh -t -n
 EOF
 }
 opensuse() {
@@ -105,7 +105,7 @@ zypper -n install python3 wget curl sudo
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py -O /bin/systemctl
 chmod +x /bin/systemctl
 echo "root ALL=(ALL:ALL) ALL" >> /etc/sudoers
-echo y |  TZ=Etc/UTC bash NewInstall.sh -t
+echo y |  TZ=Etc/UTC bash NewInstall.sh -t -n
 EOF
 }
 $1

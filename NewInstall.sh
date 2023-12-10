@@ -3,6 +3,7 @@
 RED='\033[0;31m'
 docker=""
 nointeractive=0
+shopt -s expand_aliases
 usage() {
 cat <<EOF
 Usage: $(basename "${BASH_SOURCE[0]}") [-h] [-d] [-n]
