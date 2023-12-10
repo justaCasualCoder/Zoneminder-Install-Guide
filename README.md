@@ -16,3 +16,16 @@ Currently the most stable distro to install on is : **Debian**
 Currently the fastest distro to install on is: **Alpine Linux** at `31.025s`! However that is at Microsoft Azure's 10Gbps
 
 If you would like support for a different Linux distro , create a issue and I will try to add support!
+
+## Getting started!
+Leave a star (You know you want to :smirk:)
+
+Get the script (Stable Branch):
+```bash
+wget "https://raw.githubusercontent.com/justaCasualCoder/Zoneminder-Install-Guide/stable/NewInstall.sh"
+``` 
+Run it! :
+```bash
+chmod +x NewInstall.sh && bash NewInstall.sh
+```
+Profit.
