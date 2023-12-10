@@ -8,6 +8,7 @@ on:
       - NewInstall.sh
     tags-ignore:
       - "*"
+  workflow_dispatch:
 
 jobs:
   test:
